@@ -1,0 +1,51 @@
+import { describe, expect, test } from "bun:test";
+
+describe("git module", () => {
+	test("git module exports functions", async () => {
+		const git = await import("../../src/lib/git.js");
+
+		expect(typeof git.getStatus).toBe("function");
+		expect(typeof git.commit).toBe("function");
+		expect(typeof git.push).toBe("function");
+		expect(typeof git.pullRebase).toBe("function");
+		expect(typeof git.fetch).toBe("function");
+		expect(typeof git.log).toBe("function");
+		expect(typeof git.diff).toBe("function");
+		expect(typeof git.diffStaged).toBe("function");
+		expect(typeof git.getBranches).toBe("function");
+		expect(typeof git.createBranch).toBe("function");
+		expect(typeof git.deleteBranch).toBe("function");
+		expect(typeof git.switchBranch).toBe("function");
+		expect(typeof git.stash).toBe("function");
+		expect(typeof git.stashPop).toBe("function");
+		expect(typeof git.stashList).toBe("function");
+		expect(typeof git.tag).toBe("function");
+		expect(typeof git.tagList).toBe("function");
+		expect(typeof git.undo).toBe("function");
+		expect(typeof git.getCurrentBranch).toBe("function");
+		expect(typeof git.clone).toBe("function");
+		expect(typeof git.init).toBe("function");
+		expect(typeof git.remoteAdd).toBe("function");
+		expect(typeof git.remoteRemove).toBe("function");
+		expect(typeof git.remoteSetUrl).toBe("function");
+		expect(typeof git.remoteRename).toBe("function");
+		expect(typeof git.remoteGetUrl).toBe("function");
+		expect(typeof git.remoteList).toBe("function");
+		expect(typeof git.worktreeAdd).toBe("function");
+		expect(typeof git.worktreeList).toBe("function");
+		expect(typeof git.worktreeRemove).toBe("function");
+		expect(typeof git.worktreePrune).toBe("function");
+		expect(typeof git.merge).toBe("function");
+		expect(typeof git.cherryPick).toBe("function");
+		expect(typeof git.cherryPickContinue).toBe("function");
+		expect(typeof git.cherryPickAbort).toBe("function");
+		expect(typeof git.clean).toBe("function");
+		expect(typeof git.archive).toBe("function");
+		expect(typeof git.bisectStart).toBe("function");
+		expect(typeof git.bisectBad).toBe("function");
+		expect(typeof git.bisectGood).toBe("function");
+		expect(typeof git.bisectReset).toBe("function");
+		expect(typeof git.bisectLog).toBe("function");
+		expect(typeof git.bisectRun).toBe("function");
+	});
+});

@@ -1,0 +1,9 @@
+[
+	{ "value": "feat", "description": "A new feature" },
+	{ "value": "fix", "description": "A bug fix" },
+	{ "value": "docs", "description": "Documentation only changes" },
+	{ "value": "style", "description": "Code style changes (formatting, etc)" },
+	{ "value": "refactor", "description": "Code refactoring" },
+	{ "value": "test", "description": "Adding or fixing tests" },
+	{ "value": "chore", "description": "Build process or tool changes" }
+]

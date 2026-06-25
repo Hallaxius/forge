@@ -1,0 +1,95 @@
+const ITERATIONS = 100000;
+const KEY_LENGTH = 256;
+const SALT_LENGTH = 32;
+const IV_LENGTH = 12;
+
+function base64Encode(buf: Uint8Array): string {
+	return btoa(String.fromCharCode(...buf));
+}
+
+function base64Decode(str: string): Uint8Array {
+	return Uint8Array.from(atob(str), (c) => c.charCodeAt(0));
+}
+
+export function generateSalt(length: number = SALT_LENGTH): Uint8Array {
+	return crypto.getRandomValues(new Uint8Array(length));
+}
+
+export function generateIV(): Uint8Array {
+	return crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+}
+
+async function deriveKey(
+	password: string,
+	salt: Uint8Array,
+): Promise<CryptoKey> {
+	const encoder = new TextEncoder();
+	const keyMaterial = await crypto.subtle.importKey(
+		"raw",
+		encoder.encode(password),
+		"PBKDF2",
+		false,
+		["deriveKey"],
+	);
+
+	return crypto.subtle.deriveKey(
+		{
+			name: "PBKDF2",
+			salt,
+			iterations: ITERATIONS,
+			hash: "SHA-256",
+		},
+		keyMaterial,
+		{ name: "AES-GCM", length: KEY_LENGTH },
+		false,
+		["encrypt", "decrypt"],
+	);
+}
+
+export async function encryptToken(
+	token: string,
+	password: string,
+): Promise<string> {
+	const salt = generateSalt();
+	const iv = generateIV();
+	const key = await deriveKey(password, salt);
+	const encoder = new TextEncoder();
+	const encrypted = await crypto.subtle.encrypt(
+		{ name: "AES-GCM", iv },
+		key,
+		encoder.encode(token),
+	);
+
+	const parts = [
+		base64Encode(salt),
+		base64Encode(iv),
+		base64Encode(new Uint8Array(encrypted)),
+	];
+
+	return parts.join(":");
+}
+
+export async function decryptToken(
+	encryptedData: string,
+	password: string,
+): Promise<string> {
+	const parts = encryptedData.split(":");
+	if (parts.length !== 3) {
+		throw new Error("Invalid encrypted data format");
+	}
+
+	const [saltB64, ivB64, ciphertextB64] = parts;
+	const salt = base64Decode(saltB64);
+	const iv = base64Decode(ivB64);
+	const ciphertext = base64Decode(ciphertextB64);
+	const key = await deriveKey(password, salt);
+
+	const decrypted = await crypto.subtle.decrypt(
+		{ name: "AES-GCM", iv },
+		key,
+		ciphertext,
+	);
+
+	const decoder = new TextDecoder();
+	return decoder.decode(decrypted);
+}
