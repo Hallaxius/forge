@@ -13,14 +13,17 @@
 	"scripts": {
 		"dev": "bun --watch src/cli.ts",
 		"build:version": "bun scripts/gen-version.mjs",
-		"build": "bun run build:version && bun build src/cli.ts --outdir dist --target node",
+		"build": "bun run build:version && bun build src/cli.ts --outdir dist --target node --external inquirer",
 		"start": "bun bin/forge.js",
 		"test": "bun test",
 		"lint": "biome check",
 		"format": "biome format --write",
 		"lint:fix": "biome check --write --unsafe",
 		"prepublishOnly": "bun run build && bun test",
-		"prepack": "bun run build"
+		"prepack": "bun run build",
+		"patch": "npm version patch && npm publish",
+		"minor": "npm version minor && npm publish",
+		"major": "npm version major && npm publish"
 	},
 	"dependencies": {
 		"boxen": "^7.1.0",

@@ -1,8 +1,11 @@
 import boxen from "boxen";
 import chalk from "chalk";
+import inquirer from "inquirer";
 import ora from "ora";
 import { colors } from "../constants/colors.js";
 import { formatting } from "../constants/messages.js";
+
+const { prompt } = inquirer;
 
 function stripAnsi(str: string): string {
 	return str.replace(/\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])/g, "");
@@ -77,16 +80,11 @@ export function showSeparator(): void {
 	console.log(chalk.dim(formatting.separator));
 }
 
-async function getInquirer() {
-	return await import("inquirer");
-}
-
 export async function confirm(
 	msg: string,
 	defaultValue: boolean = true,
 ): Promise<boolean> {
-	const inquirer = await getInquirer();
-	const { value } = await inquirer.prompt([
+	const { value } = await prompt([
 		{
 			type: "confirm",
 			name: "value",
@@ -101,8 +99,7 @@ export async function select<T>(
 	message: string,
 	choices: { name: string; value: T }[],
 ): Promise<T> {
-	const inquirer = await getInquirer();
-	const { value } = await inquirer.prompt([
+	const { value } = await prompt([
 		{
 			type: "list",
 			name: "value",
@@ -117,8 +114,7 @@ export async function input(
 	message: string,
 	defaultValue?: string,
 ): Promise<string> {
-	const inquirer = await getInquirer();
-	const { value } = await inquirer.prompt([
+	const { value } = await prompt([
 		{
 			type: "input",
 			name: "value",
@@ -133,8 +129,7 @@ export async function password(
 	message: string,
 	mask: string = "*",
 ): Promise<string> {
-	const inquirer = await getInquirer();
-	const { value } = await inquirer.prompt([
+	const { value } = await prompt([
 		{
 			type: "password",
 			name: "value",
@@ -149,8 +144,7 @@ export async function checkbox(
 	message: string,
 	choices: { name: string; value: string; checked?: boolean }[],
 ): Promise<string[]> {
-	const inquirer = await getInquirer();
-	const { value } = await inquirer.prompt([
+	const { value } = await prompt([
 		{
 			type: "checkbox",
 			name: "value",
