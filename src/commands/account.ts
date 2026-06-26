@@ -62,15 +62,15 @@ export default function register(program: Command): void {
 					);
 
 					text(parts.join("\n"));
-				} else {
-					text(parts.join("\n"));
-					newline();
-					text(
-						"No GitHub token configured. Run 'fg setup' to connect your GitHub account.",
-					);
-				}
+  } else {
+    text(parts.join("\n"));
+    newline();
+    text(
+      "No GitHub token configured. Run 'fg git setup' to connect your GitHub account.",
+    );
+  }
 
-				text("Account information displayed.");
+  text("Account information displayed.");
 			} catch (err) {
 				error(
 					`Failed to load account: ${err instanceof Error ? err.message : String(err)}`,
