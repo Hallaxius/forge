@@ -23,7 +23,8 @@
 		"prepack": "bun run build",
 		"patch": "npm version patch && npm publish",
 		"minor": "npm version minor && npm publish",
-		"major": "npm version major && npm publish"
+		"major": "npm version major && npm publish",
+		"publish": "npm publish"
 	},
 	"dependencies": {
 		"@octokit/rest": "^21.1.0",
