@@ -1,4 +1,9 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, mock, test } from "bun:test";
+
+mock.module("../../src/version.const.js", () => ({
+	VERSION: "0.1.0",
+}));
+
 import { Command } from "commander";
 import register from "../../src/commands/version.js";
 
