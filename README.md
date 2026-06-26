@@ -2,7 +2,7 @@
 
 A modern Git CLI with professional UX
 
-[![npm version](https://img.shields.io/npm/v/@hallaxius/forge.svg)](https://www.npmjs.com/package/@hallaxius/forge) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![npm version](https://img.shields.io/npm/v/@hallaxius/forge.svg)](https://www.npmjs.com/package/@hallaxius/forge) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![npm downloads](https://img.shields.io/npm/dt/@hallaxius/forge.svg)](https://www.npmjs.com/package/@hallaxius/forge) [![npm weekly downloads](https://img.shields.io/npm/dw/@hallaxius/forge.svg)](https://www.npmjs.com/package/@hallaxius/forge) [![GitHub stars](https://img.shields.io/github/stars/hallaxius/forge.svg?style=social)](https://github.com/hallaxius/forge/stargazers) [![GitHub forks](https://img.shields.io/github/forks/hallaxius/forge.svg?style=social)](https://github.com/hallaxius/forge/network) [![GitHub issues](https://img.shields.io/github/issues/hallaxius/forge.svg)](https://github.com/hallaxius/forge/issues) [![GitHub closed issues](https://img.shields.io/github/issues-closed/hallaxius/forge.svg)](https://github.com/hallaxius/forge/issues?q=is%3Aissue+is%3Aclosed) [![Bun](https://img.shields.io/badge/Bun-1.0.0%2B-ff69b4.svg)](https://bun.sh) [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-green.svg)](https://nodejs.org) [![TypeScript](https://img.shields.io/badge/TypeScript-5.3%2B-blue.svg)](https://www.typescriptlang.org) [![Codecov](https://img.shields.io/codecov/c/github/hallaxius/forge.svg)](https://codecov.io/gh/hallaxius/forge) [![GitHub last commit](https://img.shields.io/github/last-commit/hallaxius/forge.svg)](https://github.com/hallaxius/forge/commits)
 
 ## Installation
 
@@ -30,7 +30,7 @@ Config saved to `~/.forge/config.json`. Token is encrypted.
 
 To reconfigure: run `fg setup` again.
 
-## Commands (26)
+## Commands (30)
 
 ### Configuration
 | Command | Description |
@@ -42,6 +42,7 @@ To reconfigure: run `fg setup` again.
 | `fg version` | Show version |
 | `fg help` | Full help |
 | `fg --help` | Quick help |
+| `fg account` | Display account information (local and GitHub) |
 
 ### Repositories
 | Command | Description |
@@ -97,14 +98,6 @@ To reconfigure: run `fg setup` again.
 | `fg tag -n <name> [-m "msg"]` | Create tag (annotated with `-m`) |
 | `fg tag --list` | List tags |
 
-### Worktrees
-| Command | Description |
-|---------|-------------|
-| `fg worktree add <path> [branch] [--new] [--detach]` | Add worktree; `--new` creates branch; `--detach` detached HEAD |
-| `fg worktree list` | List worktrees (path, branch, hash) |
-| `fg worktree remove <path> [--force]` | Remove worktree |
-| `fg worktree prune [--dry-run]` | Prune stale references |
-
 ### Merge / Cherry-pick
 | Command | Description |
 |---------|-------------|
@@ -113,21 +106,20 @@ To reconfigure: run `fg setup` again.
 | `fg cherry-pick --continue` | Continue after conflict |
 | `fg cherry-pick --abort` | Abort cherry-pick |
 
-### Clean / Archive
+### Clean
 | Command | Description |
 |---------|-------------|
 | `fg clean [paths...] [--dry-run] [--force] [--exclude pattern]` | Remove untracked files; `--dry-run` shows only; without `--force` asks confirmation |
-| `fg archive <tar\|tar.gz\|zip> [--prefix dir/] [--output file] [--tree-ish ref]` | Create repository archive |
 
-### Bisect
+### GitHub Integration
 | Command | Description |
 |---------|-------------|
-| `fg bisect start [bad] [good...]` | Start bisect session |
-| `fg bisect bad [commit]` | Mark bad (default HEAD) |
-| `fg bisect good <commits...>` | Mark good |
-| `fg bisect reset` | Reset bisect state |
-| `fg bisect log` | Show bisect log |
-| `fg bisect run <cmd>` | Run automated bisect script |
+| `fg ci` | Check CI status for the repository |
+| `fg issue list [-s, --state <state>]` | List GitHub issues (filter by state: open, closed, all) |
+| `fg issue create [-t, --title <title>]` | Create a new GitHub issue |
+| `fg pr list [-s, --state <state>]` | List pull requests (filter by state: open, closed, all) |
+| `fg pr create [-t, --title <title>] [-H, --head <branch>] [-B, --base <branch>]` | Create a new pull request |
+| `fg release <tag> [-n, --name <name>]` | Create a GitHub release |
 
 ### Aliases
 | Command | Description |
@@ -153,6 +145,16 @@ File: `~/.forge/config.json`
 - GitHub token encrypted with AES-GCM (Web Crypto API)
 - `clones`: last 10 clones for `fg clone --list`
 - `aliases`: custom shortcuts
+
+## Dependencies
+
+- **[Bun](https://bun.sh)** (recommended) or **Node.js >= 18.0.0**
+- **[@octokit/rest](https://github.com/octokit/rest.js)** - GitHub API client
+- **[isomorphic-git](https://github.com/isomorphic-git/isomorphic-git)** - Git operations
+- **[commander](https://github.com/tj/commander.js)** - CLI framework
+- **[inquirer](https://github.com/SBoudrias/Inquirer.js)** - Interactive prompts
+- **[chalk](https://github.com/chalk/chalk)** - Terminal colors
+- **[ora](https://github.com/sindresorhus/ora)** - Spinners
 
 ## License
 
