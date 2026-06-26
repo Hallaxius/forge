@@ -1,6 +1,6 @@
 import type { Command } from "commander";
 import * as git from "../lib/git.js";
-import { error, info, success } from "../lib/logger.js";
+import { error, text } from "../lib/logger.js";
 import { createTable } from "../lib/ui.js";
 
 export default function register(program: Command): void {
@@ -14,19 +14,19 @@ export default function register(program: Command): void {
 			try {
 				if (options.new) {
 					await git.createBranch(options.new);
-					success(`Branch '${options.new}' created.`);
+					text(`Branch '${options.new}' created.`);
 					return;
 				}
 
 				if (options.delete) {
 					await git.deleteBranch(options.delete);
-					success(`Branch '${options.delete}' deleted.`);
+					text(`Branch '${options.delete}' deleted.`);
 					return;
 				}
 
 				if (options.switch) {
 					await git.switchBranch(options.switch);
-					success(`Switched to '${options.switch}'.`);
+					text(`Switched to '${options.switch}'.`);
 					return;
 				}
 
@@ -35,8 +35,8 @@ export default function register(program: Command): void {
 					b === branches.current ? "*" : " ",
 					b,
 				]);
-				info("Branches:");
-				console.log(createTable(["", "Name"], rows));
+				text("Branches:");
+				text(createTable(["", "Name"], rows));
 			} catch (err) {
 				error(
 					`Branch operation failed: ${err instanceof Error ? err.message : String(err)}`,

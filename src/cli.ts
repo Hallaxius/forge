@@ -17,6 +17,7 @@ program
 	.description("Modern Git CLI for professional workflows")
 	.version(pkg.version);
 
+import registerAccount from "./commands/account.js";
 import registerAlias from "./commands/alias.js";
 
 import registerBranch from "./commands/branch.js";
@@ -45,6 +46,7 @@ import registerUndo from "./commands/undo.js";
 import registerVersion from "./commands/version.js";
 
 registerSetup(program);
+registerAccount(program);
 registerCommit(program);
 registerPush(program);
 registerStatus(program);

@@ -47,28 +47,19 @@ describe("alias command", () => {
 				const colWidths = headers.map((h, i) =>
 					Math.max(h.length, ...rows.map((r) => (r[i] || "").length)),
 				);
-				const separator = `+${colWidths.map((w) => "-".repeat(w + 2)).join("+")}+`;
-				const headerRow = `| ${headers.map((h, i) => h.padEnd(colWidths[i])).join(" | ")} |`;
-				const dataRows = rows.map(
-					(row) =>
-						"| " +
-						row
-							.map((cell, i) => (cell || "").padEnd(colWidths[i]))
-							.join(" | ") +
-						" |",
+				const headerRow = headers
+					.map((h, i) => h.padEnd(colWidths[i]))
+					.join("  ");
+				const dataRows = rows.map((row) =>
+					row.map((cell, i) => (cell || "").padEnd(colWidths[i])).join("  "),
 				);
-				return [separator, headerRow, separator, ...dataRows, separator].join(
-					"\n",
-				);
+				return [headerRow, ...dataRows].join("\n");
 			}),
 		}));
 
 		mock.module("../../src/lib/logger.js", () => ({
-			success: mock((_msg: string) => {}),
 			error: mock((_msg: string) => {}),
 			warning: mock((_msg: string) => {}),
-			info: mock((_msg: string) => {}),
-			highlight: mock((_msg: string) => {}),
 			text: mock((_msg: string) => {}),
 			newline: mock(() => {}),
 		}));

@@ -1,8 +1,8 @@
 import type { Command } from "commander";
 import { encryptToken, generateMachineKey } from "../lib/auth.js";
 import { ConfigManager } from "../lib/config.js";
-import { error, info, newline, success, warning } from "../lib/logger.js";
-import { confirm, input, password, showBox } from "../lib/ui.js";
+import { error, newline, text, warning } from "../lib/logger.js";
+import { confirm, input, password } from "../lib/ui.js";
 import { validateEmail } from "../lib/validators.js";
 
 export default function register(program: Command): void {
@@ -17,13 +17,13 @@ export default function register(program: Command): void {
 					warning("Forge is already configured. You are about to reconfigure.");
 					const proceed = await confirm("Continue with reconfiguration?");
 					if (!proceed) {
-						info("Setup cancelled.");
+						text("Setup cancelled.");
 						return;
 					}
 				}
 
 				newline();
-				info("Starting setup...");
+				text("Starting setup...");
 				newline();
 
 				const name = await input("Your name");
@@ -74,8 +74,7 @@ export default function register(program: Command): void {
 				});
 
 				newline();
-				showBox(
-					"Configuration Complete",
+				text(
 					[
 						`User:     ${name} <${email}>`,
 						`Token:    Set (encrypted)`,
@@ -84,7 +83,7 @@ export default function register(program: Command): void {
 					].join("\n"),
 				);
 
-				success("Forge is ready to use!");
+				text("Forge is ready to use!");
 			} catch (err) {
 				error(
 					`Setup failed: ${err instanceof Error ? err.message : String(err)}`,

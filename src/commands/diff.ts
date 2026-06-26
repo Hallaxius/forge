@@ -1,6 +1,6 @@
 import type { Command } from "commander";
 import * as git from "../lib/git.js";
-import { info, text } from "../lib/logger.js";
+import { text } from "../lib/logger.js";
 
 export default function register(program: Command): void {
 	program
@@ -14,13 +14,13 @@ export default function register(program: Command): void {
 					: await git.diff();
 
 				if (!output) {
-					info("No changes.");
+					text("No changes.");
 					return;
 				}
 
 				text(output);
 			} catch (err) {
-				info(`Diff: ${err instanceof Error ? err.message : String(err)}`);
+				text(`Diff: ${err instanceof Error ? err.message : String(err)}`);
 			}
 		});
 }

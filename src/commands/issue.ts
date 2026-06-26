@@ -1,6 +1,6 @@
 ﻿import type { Command } from "commander";
 import { createIssue, listIssues } from "../lib/github.js";
-import { error, info, success } from "../lib/logger.js";
+import { error, text } from "../lib/logger.js";
 import { createTable, input, withSpinner } from "../lib/ui.js";
 
 export default function register(program: Command): void {
@@ -21,7 +21,7 @@ export default function register(program: Command): void {
 				const result = await withSpinner("Creating issue...", () =>
 					createIssue(title, body),
 				);
-				success(`Issue #${result.number} created: ${result.url}`);
+				text(`Issue #${result.number} created: ${result.url}`);
 			} catch (err) {
 				error(
 					`Issue creation failed: ${err instanceof Error ? err.message : String(err)}`,
@@ -43,7 +43,7 @@ export default function register(program: Command): void {
 					listIssues(options.state),
 				);
 				if (issues.length === 0) {
-					info("No issues found.");
+					text("No issues found.");
 					return;
 				}
 				const rows = issues.map((i) => [
@@ -52,8 +52,8 @@ export default function register(program: Command): void {
 					i.state,
 					i.author,
 				]);
-				info("Issues:");
-				console.log(createTable(["#", "Title", "State", "Author"], rows));
+				text("Issues:");
+				text(createTable(["#", "Title", "State", "Author"], rows));
 			} catch (err) {
 				error(
 					`Failed to list issues: ${err instanceof Error ? err.message : String(err)}`,

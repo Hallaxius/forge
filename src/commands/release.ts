@@ -1,6 +1,6 @@
 ﻿import type { Command } from "commander";
 import { createRelease } from "../lib/github.js";
-import { error, success } from "../lib/logger.js";
+import { error, text } from "../lib/logger.js";
 import { input, withSpinner } from "../lib/ui.js";
 
 export default function register(program: Command): void {
@@ -16,7 +16,7 @@ export default function register(program: Command): void {
 				const result = await withSpinner("Creating release...", () =>
 					createRelease(tag, name, body),
 				);
-				success(`Release created: ${result.url}`);
+				text(`Release created: ${result.url}`);
 			} catch (err) {
 				error(
 					`Release creation failed: ${err instanceof Error ? err.message : String(err)}`,

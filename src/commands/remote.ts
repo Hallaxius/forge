@@ -1,6 +1,6 @@
 import type { Command } from "commander";
 import * as git from "../lib/git.js";
-import { error, info, success } from "../lib/logger.js";
+import { error, text } from "../lib/logger.js";
 import { confirm, createTable } from "../lib/ui.js";
 
 export default function register(program: Command): void {
@@ -12,7 +12,7 @@ export default function register(program: Command): void {
 		.action(async (name, url) => {
 			try {
 				await git.remoteAdd(name, url);
-				success(`Remote '${name}' added (${url}).`);
+				text(`Remote '${name}' added (${url}).`);
 			} catch (err) {
 				error(
 					`Failed to add remote: ${err instanceof Error ? err.message : String(err)}`,
@@ -31,12 +31,12 @@ export default function register(program: Command): void {
 				);
 
 				if (!confirmed) {
-					info("Canceled.");
+					text("Canceled.");
 					return;
 				}
 
 				await git.remoteRemove(name);
-				success(`Remote '${name}' removed.`);
+				text(`Remote '${name}' removed.`);
 			} catch (err) {
 				error(
 					`Failed to remove remote: ${err instanceof Error ? err.message : String(err)}`,
@@ -50,7 +50,7 @@ export default function register(program: Command): void {
 		.action(async (name, newUrl) => {
 			try {
 				await git.remoteSetUrl(name, newUrl);
-				success(`Remote '${name}' URL updated to ${newUrl}.`);
+				text(`Remote '${name}' URL updated to ${newUrl}.`);
 			} catch (err) {
 				error(
 					`Failed to update remote URL: ${err instanceof Error ? err.message : String(err)}`,
@@ -64,7 +64,7 @@ export default function register(program: Command): void {
 		.action(async (oldName, newName) => {
 			try {
 				await git.remoteRename(oldName, newName);
-				success(`Remote '${oldName}' renamed to '${newName}'.`);
+				text(`Remote '${oldName}' renamed to '${newName}'.`);
 			} catch (err) {
 				error(
 					`Failed to rename remote: ${err instanceof Error ? err.message : String(err)}`,
@@ -78,7 +78,7 @@ export default function register(program: Command): void {
 		.action(async (name) => {
 			try {
 				const url = await git.remoteGetUrl(name);
-				info(`Remote '${name}': ${url}`);
+				text(`Remote '${name}': ${url}`);
 			} catch (err) {
 				error(
 					`Failed to get remote URL: ${err instanceof Error ? err.message : String(err)}`,
@@ -91,13 +91,13 @@ export default function register(program: Command): void {
 			const remotes = await git.remoteList();
 
 			if (remotes.length === 0) {
-				info("No remotes configured.");
+				text("No remotes configured.");
 				return;
 			}
 
 			const rows = remotes.map((r) => [r.name, r.url]);
-			info("Remotes:");
-			console.log(createTable(["Name", "URL"], rows));
+			text("Remotes:");
+			text(createTable(["Name", "URL"], rows));
 		} catch (err) {
 			error(
 				`Failed to list remotes: ${err instanceof Error ? err.message : String(err)}`,

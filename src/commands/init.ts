@@ -1,7 +1,6 @@
 import type { Command } from "commander";
 import * as git from "../lib/git.js";
-import { error, success } from "../lib/logger.js";
-import { showBox } from "../lib/ui.js";
+import { error, text } from "../lib/logger.js";
 
 export default function register(program: Command): void {
 	program
@@ -21,9 +20,9 @@ export default function register(program: Command): void {
 				}
 
 				const content = [`Path: ${targetDir}`].join("\n");
-				showBox("Repository Initialized", content);
+				text(content);
 
-				success(`Git repository initialized at ${targetDir}.`);
+				text(`Git repository initialized at ${targetDir}.`);
 			} catch (err) {
 				error(
 					`Init failed: ${err instanceof Error ? err.message : String(err)}`,

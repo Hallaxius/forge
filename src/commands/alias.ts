@@ -2,7 +2,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import type { Command } from "commander";
 import Conf from "conf";
-import { error, info, success } from "../lib/logger.js";
+import { error, text } from "../lib/logger.js";
 import { createTable } from "../lib/ui.js";
 
 const aliasConfig = new Conf({
@@ -19,7 +19,7 @@ export default function register(program: Command): void {
 		.action(async (name, command) => {
 			try {
 				aliasConfig.set(name, command);
-				success(`Alias '${name}' created.`);
+				text(`Alias '${name}' created.`);
 			} catch (err) {
 				error(
 					`Failed to create alias: ${err instanceof Error ? err.message : String(err)}`,
@@ -36,13 +36,13 @@ export default function register(program: Command): void {
 				const entries = Object.entries(store);
 
 				if (entries.length === 0) {
-					info("No aliases configured.");
+					text("No aliases configured.");
 					return;
 				}
 
 				const rows = entries.map(([name, cmd]) => [name, cmd]);
-				info("Aliases:");
-				console.log(createTable(["Name", "Command"], rows));
+				text("Aliases:");
+				text(createTable(["Name", "Command"], rows));
 			} catch (err) {
 				error(
 					`Failed to list aliases: ${err instanceof Error ? err.message : String(err)}`,
@@ -56,7 +56,7 @@ export default function register(program: Command): void {
 		.action(async (name) => {
 			try {
 				aliasConfig.delete(name);
-				success(`Alias '${name}' removed.`);
+				text(`Alias '${name}' removed.`);
 			} catch (err) {
 				error(
 					`Failed to remove alias: ${err instanceof Error ? err.message : String(err)}`,

@@ -1,6 +1,6 @@
 ﻿import type { Command } from "commander";
 import { createPR, listPRs } from "../lib/github.js";
-import { error, info, success } from "../lib/logger.js";
+import { error, text } from "../lib/logger.js";
 import { createTable, input, withSpinner } from "../lib/ui.js";
 
 export default function register(program: Command): void {
@@ -24,7 +24,7 @@ export default function register(program: Command): void {
 				const result = await withSpinner("Creating PR...", () =>
 					createPR(title, body, head, base),
 				);
-				success(`PR #${result.number} created: ${result.url}`);
+				text(`PR #${result.number} created: ${result.url}`);
 			} catch (err) {
 				error(
 					`PR creation failed: ${err instanceof Error ? err.message : String(err)}`,
@@ -45,7 +45,7 @@ export default function register(program: Command): void {
 					listPRs(options.state),
 				);
 				if (prs.length === 0) {
-					info("No pull requests found.");
+					text("No pull requests found.");
 					return;
 				}
 				const rows = prs.map((p) => [
@@ -54,8 +54,8 @@ export default function register(program: Command): void {
 					p.state,
 					p.author,
 				]);
-				info("Pull Requests:");
-				console.log(createTable(["#", "Title", "State", "Author"], rows));
+				text("Pull Requests:");
+				text(createTable(["#", "Title", "State", "Author"], rows));
 			} catch (err) {
 				error(
 					`Failed to list PRs: ${err instanceof Error ? err.message : String(err)}`,

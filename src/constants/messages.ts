@@ -1,14 +1,4 @@
-export const icons = {
-	success: "\u2713",
-	error: "\u2717",
-	warning: "\u26A0",
-	info: "\u25CB",
-	highlight: "\u00BB",
-};
-
 export const formatting = {
-	header: "\u2550".repeat(30),
-	separator: "\u2500".repeat(25),
 	indent: "  ",
 };
 

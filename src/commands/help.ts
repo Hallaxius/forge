@@ -1,6 +1,6 @@
 import type { Command } from "commander";
 import { newline, text } from "../lib/logger.js";
-import { createTable, showHeader } from "../lib/ui.js";
+import { createTable } from "../lib/ui.js";
 
 const commands: { name: string; description: string }[] = [
 	{ name: "setup", description: "Interactive setup wizard" },
@@ -27,13 +27,13 @@ export default function register(program: Command): void {
 		.command("help")
 		.description("Show comprehensive help")
 		.action(async () => {
-			showHeader("Forge - Git CLI");
+			text("Forge - Git CLI");
 
 			const rows = commands.map((c) => [c.name, c.description]);
 			text(createTable(["Command", "Description"], rows));
 
 			newline();
-			showHeader("Usage Examples");
+			text("Usage Examples");
 			text("");
 			text("  fg setup                          Start interactive setup");
 			text('  fg commit -m "fix: resolve issue"  Quick commit with message');

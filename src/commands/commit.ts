@@ -1,7 +1,7 @@
 import type { Command } from "commander";
 import { commitTypes } from "../constants/messages.js";
 import * as git from "../lib/git.js";
-import { error, info, newline, success, text, warning } from "../lib/logger.js";
+import { error, newline, text, warning } from "../lib/logger.js";
 import { checkbox, confirm, input, select, withSpinner } from "../lib/ui.js";
 
 export default function register(program: Command): void {
@@ -14,13 +14,13 @@ export default function register(program: Command): void {
 			try {
 				if (options.amend) {
 					await git.amendCommit();
-					success("Last commit amended.");
+					text("Last commit amended.");
 					return;
 				}
 
 				if (options.message) {
 					const hash = await git.commit(options.message);
-					success(`Committed: ${hash}`);
+					text(`Committed: ${hash}`);
 					return;
 				}
 
@@ -67,18 +67,18 @@ export default function register(program: Command): void {
 					: `${type}: ${description}`;
 
 				newline();
-				info("Commit preview:");
+				text("Commit preview:");
 				text(`  ${fullMessage}`);
 				newline();
 
 				const proceed = await confirm("Proceed with commit?");
 				if (!proceed) {
-					info("Commit cancelled.");
+					text("Commit cancelled.");
 					return;
 				}
 
 				const hash = await git.commit(fullMessage);
-				success(`Committed: ${hash}`);
+				text(`Committed: ${hash}`);
 			} catch (err) {
 				error(
 					`Commit failed: ${err instanceof Error ? err.message : String(err)}`,

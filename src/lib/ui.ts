@@ -1,9 +1,5 @@
-import boxen from "boxen";
-import chalk from "chalk";
 import inquirer from "inquirer";
 import ora from "ora";
-import { colors } from "../constants/colors.js";
-import { formatting } from "../constants/messages.js";
 
 const { prompt } = inquirer;
 
@@ -17,39 +13,18 @@ function padEnd(str: string, len: number): string {
 	return diff > 0 ? str + " ".repeat(diff) : str;
 }
 
-export function showBox(
-	title: string,
-	content: string,
-	options?: Record<string, unknown>,
-): void {
-	const boxContent = `${chalk.bold(title)}\n\n${content}`;
-	console.log(
-		boxen(boxContent, {
-			padding: 1,
-			borderColor: "cyan",
-			borderStyle: "round",
-			...options,
-		}),
-	);
-}
-
 export function createTable(headers: string[], rows: string[][]): string {
-	const _colCount = headers.length;
 	const colWidths: number[] = headers.map((h, i) => {
 		const maxRow = Math.max(...rows.map((r) => stripAnsi(r[i] || "").length));
 		return Math.max(stripAnsi(h).length, maxRow);
 	});
 
-	const separator = `+${colWidths.map((w) => "-".repeat(w + 2)).join("+")}+`;
-	const headerRow = `| ${headers.map((h, i) => padEnd(h, colWidths[i])).join(" | ")} |`;
-	const dataRows = rows.map(
-		(row) =>
-			"| " +
-			row.map((cell, i) => padEnd(cell, colWidths[i])).join(" | ") +
-			" |",
+	const headerRow = headers.map((h, i) => padEnd(h, colWidths[i])).join("  ");
+	const dataRows = rows.map((row) =>
+		row.map((cell, i) => padEnd(cell, colWidths[i])).join("  "),
 	);
 
-	return [separator, headerRow, separator, ...dataRows, separator].join("\n");
+	return [headerRow, ...dataRows].join("\n");
 }
 
 export async function withSpinner<T>(
@@ -69,15 +44,6 @@ export async function withSpinner<T>(
 		spinner.fail();
 		throw err;
 	}
-}
-
-export function showHeader(text: string): void {
-	console.log(chalk.hex(colors.highlight)(text));
-	console.log(chalk.hex(colors.info)(formatting.header));
-}
-
-export function showSeparator(): void {
-	console.log(chalk.dim(formatting.separator));
 }
 
 export async function confirm(

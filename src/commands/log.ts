@@ -1,6 +1,6 @@
 import type { Command } from "commander";
 import * as git from "../lib/git.js";
-import { info } from "../lib/logger.js";
+import { text } from "../lib/logger.js";
 import { createTable } from "../lib/ui.js";
 
 export default function register(program: Command): void {
@@ -20,10 +20,10 @@ export default function register(program: Command): void {
 					c.message.substring(0, 60),
 				]);
 
-				info(`Last ${commits.length} commits:`);
-				console.log(createTable(["Hash", "Date", "Author", "Message"], rows));
+				text(`Last ${commits.length} commits:`);
+				text(createTable(["Hash", "Date", "Author", "Message"], rows));
 			} catch (err) {
-				info(`Log: ${err instanceof Error ? err.message : String(err)}`);
+				text(`Log: ${err instanceof Error ? err.message : String(err)}`);
 			}
 		});
 }

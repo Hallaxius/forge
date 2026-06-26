@@ -1,8 +1,7 @@
 import { spawnSync } from "node:child_process";
 import type { Command } from "commander";
 import { ConfigManager } from "../lib/config.js";
-import { info } from "../lib/logger.js";
-import { showBox } from "../lib/ui.js";
+import { text } from "../lib/logger.js";
 
 export default function register(program: Command): void {
 	program
@@ -18,7 +17,7 @@ export default function register(program: Command): void {
 					const editor = process.env.EDITOR || "vim";
 					const configPath = config.getPath();
 					spawnSync(editor, [configPath], { stdio: "inherit" });
-					info("Config edited.");
+					text("Config edited.");
 					return;
 				}
 
@@ -40,9 +39,9 @@ export default function register(program: Command): void {
 					`  Editor:          ${prefs.editor}`,
 				].join("\n");
 
-				showBox("Configuration", content);
+				text(content);
 			} catch (err) {
-				info(`Config: ${err instanceof Error ? err.message : String(err)}`);
+				text(`Config: ${err instanceof Error ? err.message : String(err)}`);
 			}
 		});
 }

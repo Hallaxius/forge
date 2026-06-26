@@ -1,6 +1,6 @@
 import type { Command } from "commander";
 import * as git from "../lib/git.js";
-import { error, info, success } from "../lib/logger.js";
+import { error, text } from "../lib/logger.js";
 
 export default function register(program: Command): void {
 	program
@@ -20,13 +20,13 @@ export default function register(program: Command): void {
 			) => {
 				try {
 					const currentBranch = await git.getCurrentBranch();
-					info(`Merging '${branch}' into '${currentBranch}'...`);
+					text(`Merging '${branch}' into '${currentBranch}'...`);
 					const result = await git.merge(branch, {
 						noFF: options.noFF ?? undefined,
 						squash: options.squash ?? undefined,
 						noCommit: options.noCommit ?? undefined,
 					});
-					success(`Merge completed: ${result}`);
+					text(`Merge completed: ${result}`);
 				} catch (err) {
 					error(
 						`Merge failed: ${err instanceof Error ? err.message : String(err)}`,

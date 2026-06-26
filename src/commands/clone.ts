@@ -1,8 +1,8 @@
 import type { Command } from "commander";
 import { ConfigManager } from "../lib/config.js";
 import * as git from "../lib/git.js";
-import { error, highlight, info } from "../lib/logger.js";
-import { createTable, showBox, withSpinner } from "../lib/ui.js";
+import { error, text } from "../lib/logger.js";
+import { createTable, withSpinner } from "../lib/ui.js";
 
 export default function register(program: Command): void {
 	program
@@ -29,7 +29,7 @@ export default function register(program: Command): void {
 					const clones = config.getClones();
 
 					if (clones.length === 0) {
-						info("No recent clones found.");
+						text("No recent clones found.");
 						return;
 					}
 
@@ -38,8 +38,8 @@ export default function register(program: Command): void {
 						return [u || "", d || ""];
 					});
 
-					info("Recent clones:");
-					console.log(createTable(["URL", "Directory"], rows));
+					text("Recent clones:");
+					text(createTable(["URL", "Directory"], rows));
 					return;
 				}
 
@@ -83,10 +83,10 @@ export default function register(program: Command): void {
 					`Branch:    ${options.branch || "default"}`,
 				].join("\n");
 
-				showBox("Clone Complete", content);
+				text(content);
 
 				if (options.cd) {
-					highlight(`cd ${cloneDir}`);
+					text(`cd ${cloneDir}`);
 				}
 
 				const config = new ConfigManager();
