@@ -35,11 +35,10 @@ describe("Clone", () => {
 		expect(cli).toContain("registerClone");
 		expect(cli).toContain("registerInit");
 		expect(cli).toContain("registerRemote");
-		expect(cli).toContain("registerWorktree");
 		expect(cli).toContain("registerMerge");
-		expect(cli).toContain("registerCherryPick");
-		expect(cli).toContain("registerClean");
-		expect(cli).toContain("registerArchive");
-		expect(cli).toContain("registerBisect");
+		expect(cli).toContain("registerPr");
+		expect(cli).toContain("registerIssue");
+		expect(cli).toContain("registerRelease");
+		expect(cli).toContain("registerCi");
 	});
 });

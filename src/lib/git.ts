@@ -1,6 +1,18 @@
-import simpleGit from "simple-git";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { diffLines } from "diff";
+import git, {
+	currentBranch,
+	log as gitLog,
+	listBranches,
+	listRemotes,
+	listTags,
+	statusMatrix,
+} from "isomorphic-git";
+import http from "isomorphic-git/http/node";
+import { resolveToken } from "./auth.js";
 
-const git = simpleGit();
+const dir = process.cwd();
 
 interface StatusResult {
 	current: string;
@@ -29,354 +41,503 @@ interface StashEntry {
 	description: string;
 }
 
+function statusChar(head: number, workdir: number): string {
+	if (workdir === 0) return "D";
+	if (head === 0 && workdir === 2) return "?";
+	if (workdir === 2) return "M";
+	return " ";
+}
+
+function indexChar(head: number, stage: number): string {
+	if (head === 0 && stage === 2) return "A";
+	if (stage === 0 && head === 1) return "D";
+	if (stage === 2 && head === 1) return "M";
+	return " ";
+}
+
 export async function getStatus(): Promise<StatusResult> {
-	const status = await git.status();
-	const log = await git.log({ maxCount: 5 });
+	const matrix = await statusMatrix({ fs, dir });
+
+	const current = (await currentBranch({ fs, dir, fullname: false })) || "";
+	const logResult = await gitLog({ fs, dir, depth: 5 });
+
+	const files = matrix
+		.filter(
+			([_f, head, workdir, stage]) =>
+				head !== 1 || workdir !== 1 || stage !== 1,
+		)
+		.map(([filepath, head, workdir, stage]) => ({
+			path: filepath,
+			working_dir: statusChar(head as number, workdir as number),
+			index: indexChar(head as number, stage as number),
+		}));
 
 	return {
-		current: status.current || "",
-		tracking: status.tracking || "",
-		ahead: status.ahead,
-		behind: status.behind,
-		files: status.files.map((f) => ({
-			path: f.path,
-			working_dir: f.working_dir,
-			index: f.index,
-		})),
-		recentCommits: log.all.map((c) => ({
-			hash: c.hash,
-			date: c.date,
-			message: c.message,
+		current,
+		tracking: "",
+		ahead: 0,
+		behind: 0,
+		files,
+		recentCommits: logResult.map((c) => ({
+			hash: c.oid,
+			date: String(c.commit.author.timestamp),
+			message: c.commit.message,
 		})),
 	};
 }
 
 export async function commit(message: string): Promise<string> {
-	const result = await git.commit(message);
-	return result.commit || "";
+	const name =
+		(await git.getConfig({ fs, dir, path: "user.name" })) || "Unknown";
+	const email =
+		(await git.getConfig({ fs, dir, path: "user.email" })) ||
+		"unknown@localhost";
+
+	const result = await git.commit({
+		fs,
+		dir,
+		message,
+		author: { name, email },
+	});
+	return result;
+}
+
+export async function amendCommit(): Promise<void> {
+	const commits = await gitLog({ fs, dir, depth: 1 });
+	if (commits.length === 0) throw new Error("No commits to amend");
+	const { commit: c } = commits[0];
+
+	const name =
+		(await git.getConfig({ fs, dir, path: "user.name" })) || "Unknown";
+	const email =
+		(await git.getConfig({ fs, dir, path: "user.email" })) ||
+		"unknown@localhost";
+
+	await git.commit({
+		fs,
+		dir,
+		message: c.message,
+		author: c.author,
+		committer: { name, email },
+		tree: c.tree,
+		parent: c.parent.map((p) => p.toString()),
+	});
+}
+
+export async function add(filepaths: string | string[]): Promise<void> {
+	const files = Array.isArray(filepaths) ? filepaths : [filepaths];
+	for (const filepath of files) {
+		await git.add({ fs, dir, filepath });
+	}
 }
 
 export async function push(force: boolean = false): Promise<string> {
-	const args = force ? (["-f"] as any) : undefined;
-	const result = await git.push("origin", undefined as any, args);
+	const token = await resolveToken();
+	const result = await git.push({
+		fs,
+		http,
+		dir,
+		force,
+		token,
+		oauth2format: "github",
+	});
 	return result;
 }
 
 export async function pullRebase(): Promise<string> {
-	const result = await git.pull(["--rebase"]);
+	const token = await resolveToken();
+	await git.fetch({ fs, http, dir, token, oauth2format: "github" });
+	const current = (await currentBranch({ fs, dir })) || "";
+	const result = await git.merge({
+		fs,
+		dir,
+		theirs: current,
+		fastForwardOnly: true,
+	});
 	return result;
 }
 
 export async function log(maxCount: number = 10): Promise<LogEntry[]> {
-	const result = await git.log({ maxCount });
-	return result.all.map((c) => ({
-		hash: c.hash,
-		date: c.date,
-		message: c.message,
-		author: c.author_name,
+	const result = await gitLog({ fs, dir, depth: maxCount, ref: "HEAD" });
+	return result.map((c) => ({
+		hash: c.oid,
+		date: String(c.commit.author.timestamp),
+		message: c.commit.message,
+		author: c.commit.author.name,
 	}));
 }
 
 export async function diff(): Promise<string> {
-	const result = await git.diff();
-	return result;
+	const matrix = await statusMatrix({ fs, dir });
+	const changed = matrix.filter(
+		([_f, head, workdir, _stage]) => head !== 1 || workdir !== 1,
+	);
+	if (changed.length === 0) return "";
+
+	const headOid = await git.resolveRef({ fs, dir, ref: "HEAD" });
+	const output: string[] = [];
+
+	for (const [filepath, head, workdir] of changed) {
+		let oldContent = "";
+		let newContent = "";
+
+		if ((head as number) !== 0) {
+			try {
+				const blob = await git.readBlob({
+					fs,
+					dir,
+					oid: headOid,
+					filepath,
+				});
+				oldContent = new TextDecoder().decode(blob.blob);
+			} catch {}
+		}
+
+		if ((workdir as number) !== 0) {
+			try {
+				newContent = readFileSync(join(dir, filepath), "utf-8");
+			} catch {}
+		}
+
+		output.push(`diff --git a/${filepath} b/${filepath}`);
+		const patch = diffLines(oldContent, newContent);
+		for (const part of patch) {
+			if (part.added) {
+				for (const line of part.value.split("\n").filter(Boolean)) {
+					output.push(`+${line}`);
+				}
+			} else if (part.removed) {
+				for (const line of part.value.split("\n").filter(Boolean)) {
+					output.push(`-${line}`);
+				}
+			} else {
+				for (const line of part.value.split("\n").filter(Boolean)) {
+					output.push(` ${line}`);
+				}
+			}
+		}
+	}
+
+	return output.join("\n");
 }
 
 export async function diffStaged(): Promise<string> {
-	const result = await git.diff(["--cached"]);
-	return result;
+	const matrix = await statusMatrix({ fs, dir });
+	const changed = matrix.filter(
+		([_f, head, _workdir, stage]) => head !== 1 || (stage as number) !== 1,
+	);
+	if (changed.length === 0) return "";
+
+	const headOid = await git.resolveRef({ fs, dir, ref: "HEAD" });
+	const output: string[] = [];
+
+	for (const [filepath, head, _workdir, stage] of changed) {
+		let oldContent = "";
+		let newContent = "";
+
+		if ((head as number) !== 0) {
+			try {
+				const blob = await git.readBlob({
+					fs,
+					dir,
+					oid: headOid,
+					filepath,
+				});
+				oldContent = new TextDecoder().decode(blob.blob);
+			} catch {}
+		}
+
+		if ((stage as number) !== 0) {
+			try {
+				const blob = await git.readBlob({
+					fs,
+					dir,
+					oid: headOid,
+					filepath,
+				});
+				newContent = new TextDecoder().decode(blob.blob);
+			} catch {}
+		}
+
+		output.push(`diff --git a/${filepath} b/${filepath} (staged)`);
+		const patch = diffLines(oldContent, newContent);
+		for (const part of patch) {
+			if (part.added) {
+				for (const line of part.value.split("\n").filter(Boolean)) {
+					output.push(`+${line}`);
+				}
+			} else if (part.removed) {
+				for (const line of part.value.split("\n").filter(Boolean)) {
+					output.push(`-${line}`);
+				}
+			} else {
+				for (const line of part.value.split("\n").filter(Boolean)) {
+					output.push(` ${line}`);
+				}
+			}
+		}
+	}
+
+	return output.join("\n");
 }
 
 export async function getBranches(): Promise<BranchesResult> {
-	const result = await git.branch();
+	const all = await listBranches({ fs, dir });
+	const current = (await currentBranch({ fs, dir, fullname: false })) || "";
 	return {
-		current: result.current,
-		branches: result.branches
-			? Object.keys(result.branches).filter((b) => b !== result.current)
-			: [],
-		all: result.all || [],
+		current,
+		branches: all.filter((b) => b !== current),
+		all,
 	};
 }
 
 export async function createBranch(name: string): Promise<void> {
-	await git.branch([name]);
+	await git.branch({ fs, dir, ref: name });
 }
 
 export async function deleteBranch(
 	name: string,
 	force: boolean = false,
 ): Promise<void> {
-	const args = force ? ["-D", name] : ["-d", name];
-	await git.branch(args);
+	if (force) {
+		await git.deleteBranch({ fs, dir, ref: name });
+	} else {
+		await git.deleteBranch({ fs, dir, ref: name });
+	}
 }
 
 export async function switchBranch(name: string): Promise<void> {
-	await git.checkout(name);
+	await git.checkout({ fs, dir, ref: name });
 }
 
 export async function stash(): Promise<string> {
-	const result = await git.stash();
-	return result;
+	await git.stash({ fs, dir });
+	return "Stash saved";
 }
 
 export async function stashPop(): Promise<string> {
-	const result = await git.stash(["pop"]);
-	return result;
+	const stashes = await stashList();
+	if (stashes.length === 0) throw new Error("No stashes to pop");
+
+	try {
+		await git.stash({ fs, dir });
+	} catch {
+		throw new Error("Failed to apply stash");
+	}
+
+	const refs = await git.listRefs({ fs, dir, prefix: "refs/stash" });
+	if (refs.length > 0) {
+		await git.deleteRef({ fs, dir, ref: refs[0] });
+	}
+
+	return "Stash popped";
 }
 
 export async function stashList(): Promise<StashEntry[]> {
-	const result = await git.stashList();
-	return result.all.map((s, i) => ({
-		index: i + 1,
-		description: s.message,
-	}));
+	try {
+		const stashLog = await gitLog({ fs, dir, ref: "refs/stash" });
+		return stashLog.map((c, i) => ({
+			index: i + 1,
+			description: c.commit.message,
+		}));
+	} catch {
+		return [];
+	}
 }
 
 export async function tag(name: string, message?: string): Promise<string> {
 	if (message) {
-		await git.tag(["-a", name, "-m", message]);
+		await git.tag({ fs, dir, ref: name, message });
 	} else {
-		await git.tag([name]);
+		await git.tag({ fs, dir, ref: name });
 	}
 	return name;
 }
 
 export async function tagList(): Promise<string[]> {
-	const result = await git.tag();
-	return result.split("\n").filter(Boolean);
+	return listTags({ fs, dir });
 }
 
 export async function fetch(): Promise<string> {
-	const result = await git.fetch();
+	const token = await resolveToken();
+	const result = await git.fetch({
+		fs,
+		http,
+		dir,
+		token,
+		oauth2format: "github",
+	});
 	return result;
 }
 
 export async function undo(): Promise<string> {
-	const result = await git.reset(["--soft", "HEAD~1"]);
-	return result;
+	const commits = await gitLog({ fs, dir, depth: 1, ref: "HEAD" });
+	if (commits.length === 0) throw new Error("No commits to undo");
+	const c = commits[0];
+	if (c.commit.parent.length === 0) throw new Error("Cannot undo root commit");
+
+	const parentOid = c.commit.parent[0];
+	await git.writeRef({
+		fs,
+		dir,
+		ref: "HEAD",
+		value: parentOid.toString(),
+		force: true,
+	});
+	return `Undone to ${parentOid.toString().slice(0, 7)}`;
 }
 
 export async function getCurrentBranch(): Promise<string> {
-	const result = await git.branch();
-	return result.current;
+	return (await currentBranch({ fs, dir })) || "";
 }
 
 export async function clone(
 	url: string,
-	dir?: string,
+	targetDir?: string,
 	options?: {
-		ssh?: boolean;
 		depth?: number;
 		branch?: string;
 		recurseSubmodules?: boolean;
 	},
 ): Promise<string> {
-	const args: string[] = [];
-	if (options?.depth) args.push("--depth", String(options.depth));
-	if (options?.branch) args.push("--branch", options.branch);
-	if (options?.recurseSubmodules) args.push("--recurse-submodules");
-	const targetDir = dir || url.split("/").pop()?.replace(".git", "") || "repo";
-	await git.clone(url, targetDir, args);
-	return targetDir;
+	const token = await resolveToken();
+	const cloneDir =
+		targetDir || url.split("/").pop()?.replace(".git", "") || "repo";
+
+	await git.clone({
+		fs,
+		http,
+		dir: cloneDir,
+		url,
+		singleBranch: !!options?.branch,
+		ref: options?.branch,
+		depth: options?.depth,
+		token,
+		oauth2format: "github",
+	});
+
+	return cloneDir;
 }
 
 export async function init(
-	dir?: string,
+	targetDir?: string,
 	options?: { initialBranch?: string },
 ): Promise<void> {
-	const opts: string[] = [];
-	if (options?.initialBranch)
-		opts.push("--initial-branch", options.initialBranch);
-	if (dir) opts.push(dir);
-	await git.init(opts.length > 0 ? opts : (true as any));
-}
-
-interface RemoteEntry {
-	name: string;
-	url: string;
+	const initDir = targetDir || ".";
+	await git.init({
+		fs,
+		dir: initDir,
+		defaultBranch: options?.initialBranch,
+	});
 }
 
 export async function remoteAdd(name: string, url: string): Promise<void> {
-	await git.addRemote(name, url);
+	await git.addRemote({ fs, dir, remote: name, url });
 }
 
 export async function remoteRemove(name: string): Promise<void> {
-	await git.removeRemote(name);
+	await git.deleteRemote({ fs, dir, remote: name });
 }
 
 export async function remoteSetUrl(
 	name: string,
 	newUrl: string,
 ): Promise<void> {
-	await git.raw(["remote", "set-url", name, newUrl]);
+	await git.setConfig({
+		fs,
+		dir,
+		path: `remote.${name}.url`,
+		value: newUrl,
+	});
 }
 
 export async function remoteRename(
 	oldName: string,
 	newName: string,
 ): Promise<void> {
-	await git.raw(["remote", "rename", oldName, newName]);
+	const url = await git.getConfig({
+		fs,
+		dir,
+		path: `remote.${oldName}.url`,
+	});
+	if (!url) throw new Error(`Remote '${oldName}' not found`);
+
+	await remoteAdd(newName, url);
+	await remoteRemove(oldName);
 }
 
 export async function remoteGetUrl(name: string): Promise<string> {
-	const result = await git.raw(["remote", "get-url", name]);
-	return result.trim();
+	const url = await git.getConfig({
+		fs,
+		dir,
+		path: `remote.${name}.url`,
+	});
+	if (!url) throw new Error(`Remote '${name}' not found`);
+	return url;
 }
 
-export async function remoteList(): Promise<RemoteEntry[]> {
-	const result = await git.getRemotes(true);
-	return result.map((r) => ({ name: r.name, url: r.refs.fetch }));
-}
-
-interface WorktreeEntry {
-	path: string;
-	branch: string;
-	hash: string;
-}
-
-export async function worktreeAdd(
-	path: string,
-	branch?: string,
-	options?: { new?: boolean; detach?: boolean },
-): Promise<void> {
-	const args = ["worktree", "add"];
-	if (options?.detach) args.push("--detach");
-	args.push(path);
-	if (branch) {
-		if (options?.new) args.push(branch);
-		else args.push(branch);
-	}
-	await git.raw(args);
-}
-
-export async function worktreeList(): Promise<WorktreeEntry[]> {
-	const result = await git.raw(["worktree", "list", "--porcelain"]);
-	const entries: WorktreeEntry[] = [];
-	const lines = result.split("\n");
-	let current: Partial<WorktreeEntry> = {};
-	for (const line of lines) {
-		if (line.startsWith("worktree ")) {
-			current.path = line.slice(9).trim();
-		} else if (line.startsWith("HEAD ")) {
-			current.hash = line.slice(5).trim();
-		} else if (line.startsWith("branch ")) {
-			current.branch = line.slice(7).trim().replace("refs/heads/", "");
-		} else if (line === "") {
-			if (current.path) entries.push(current as WorktreeEntry);
-			current = {};
-		}
-	}
-	if (current.path) entries.push(current as WorktreeEntry);
-	return entries;
-}
-
-export async function worktreeRemove(
-	path: string,
-	force: boolean = false,
-): Promise<void> {
-	const args = ["worktree", "remove"];
-	if (force) args.push("--force");
-	args.push(path);
-	await git.raw(args);
-}
-
-export async function worktreePrune(
-	dryRun: boolean = false,
-): Promise<string[]> {
-	const args = ["worktree", "prune"];
-	if (dryRun) args.push("--dry-run");
-	const result = await git.raw(args);
-	return result.split("\n").filter(Boolean);
+export async function remoteList(): Promise<{ name: string; url: string }[]> {
+	const remotes = await listRemotes({ fs, dir });
+	return remotes.map((r) => ({ name: r.remote, url: r.url }));
 }
 
 export async function merge(
 	branch: string,
-	options?: { noFF?: boolean; squash?: boolean; noCommit?: boolean },
+	options?: {
+		noFF?: boolean;
+		squash?: boolean;
+		noCommit?: boolean;
+	},
 ): Promise<string> {
-	const args = ["merge"];
-	if (options?.noFF) args.push("--no-ff");
-	if (options?.squash) args.push("--squash");
-	if (options?.noCommit) args.push("--no-commit");
-	args.push(branch);
-	const result = await git.raw(args);
+	const name =
+		(await git.getConfig({ fs, dir, path: "user.name" })) || "Unknown";
+	const email =
+		(await git.getConfig({ fs, dir, path: "user.email" })) ||
+		"unknown@localhost";
+
+	const result = await git.merge({
+		fs,
+		dir,
+		theirs: branch,
+		ours: undefined,
+		noCommit: options?.noCommit,
+		squash: options?.squash,
+		fastForward: !options?.noFF,
+		author: { name, email },
+		committer: { name, email },
+	});
 	return result;
 }
 
-export async function cherryPick(
-	commits: string[],
-	options?: { noCommit?: boolean; mainline?: number },
-): Promise<void> {
-	const args = ["cherry-pick"];
-	if (options?.noCommit) args.push("--no-commit");
-	if (options?.mainline) args.push("-m", String(options.mainline));
-	args.push(...commits);
-	await git.raw(args);
-}
-
-export async function cherryPickContinue(): Promise<void> {
-	await git.raw(["cherry-pick", "--continue"]);
-}
-
-export async function cherryPickAbort(): Promise<void> {
-	await git.raw(["cherry-pick", "--abort"]);
-}
-
-export async function clean(options?: {
-	dryRun?: boolean;
-	force?: boolean;
-	exclude?: string;
-}): Promise<string[]> {
-	const args = ["clean", "-d"];
-	if (options?.dryRun) args.push("-n");
-	if (options?.force) args.push("-f");
-	else args.push("-f");
-	if (options?.exclude) args.push("-x", options.exclude);
-	const result = await git.raw(args);
-	return result.split("\n").filter(Boolean);
-}
-
-export async function archive(
-	format: string,
-	options?: { prefix?: string; output?: string; treeIsh?: string },
-): Promise<string> {
-	const args = ["archive", `--format=${format}`];
-	if (options?.prefix) args.push(`--prefix=${options.prefix}`);
-	if (options?.output) args.push(`--output=${options.output}`);
-	if (options?.treeIsh) args.push(options.treeIsh);
-	else args.push("HEAD");
-	const result = await git.raw(args);
-	return result;
-}
-
-export async function bisectStart(
-	bad?: string,
-	good?: string[],
-): Promise<void> {
-	await git.raw(["bisect", "start"]);
-	if (bad) await git.raw(["bisect", "bad", bad]);
-	if (good && good.length > 0) {
-		for (const g of good) await git.raw(["bisect", "good", g]);
-	}
-}
-
-export async function bisectBad(commit?: string): Promise<void> {
-	const args = ["bisect", "bad"];
-	if (commit) args.push(commit);
-	await git.raw(args);
-}
-
-export async function bisectGood(commits: string[]): Promise<void> {
-	for (const c of commits) await git.raw(["bisect", "good", c]);
-}
-
-export async function bisectReset(): Promise<void> {
-	await git.raw(["bisect", "reset"]);
-}
-
-export async function bisectLog(): Promise<string> {
-	return await git.raw(["bisect", "log"]);
-}
-
-export async function bisectRun(cmd: string): Promise<void> {
-	await git.raw(["bisect", "run", cmd]);
-}
+export default {
+	getStatus,
+	commit,
+	amendCommit,
+	add,
+	push,
+	pullRebase,
+	log,
+	diff,
+	diffStaged,
+	getBranches,
+	createBranch,
+	deleteBranch,
+	switchBranch,
+	stash,
+	stashPop,
+	stashList,
+	tag,
+	tagList,
+	fetch,
+	undo,
+	getCurrentBranch,
+	clone,
+	init,
+	remoteAdd,
+	remoteRemove,
+	remoteSetUrl,
+	remoteRename,
+	remoteGetUrl,
+	remoteList,
+	merge,
+};

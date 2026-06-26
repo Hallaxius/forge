@@ -1,5 +1,4 @@
 import type { Command } from "commander";
-import simpleGit from "simple-git";
 import { commitTypes } from "../constants/messages.js";
 import * as git from "../lib/git.js";
 import { error, info, newline, success, text, warning } from "../lib/logger.js";
@@ -14,8 +13,7 @@ export default function register(program: Command): void {
 		.action(async (options) => {
 			try {
 				if (options.amend) {
-					const sg = simpleGit();
-					await sg.commit("", { "--amend": null, "--no-edit": null });
+					await git.amendCommit();
 					success("Last commit amended.");
 					return;
 				}
@@ -51,10 +49,7 @@ export default function register(program: Command): void {
 					return;
 				}
 
-				const sg = simpleGit();
-				await withSpinner("Staging files...", async () => {
-					await sg.add(selectedFiles);
-				});
+				await withSpinner("Staging files...", () => git.add(selectedFiles));
 
 				newline();
 				const typeChoices = commitTypes.map((t) => ({

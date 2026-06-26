@@ -8,7 +8,11 @@ export interface ForgeConfig {
 		email: string;
 	};
 	github: {
-		token: string;
+		encryptedToken: string;
+	};
+	auth: {
+		machineKey: string;
+		hasMasterPassword: boolean;
 	};
 	preferences: {
 		autoPush: boolean;
@@ -20,7 +24,8 @@ export interface ForgeConfig {
 
 const DEFAULTS: ForgeConfig = {
 	user: { name: "", email: "" },
-	github: { token: "" },
+	github: { encryptedToken: "" },
+	auth: { machineKey: "", hasMasterPassword: false },
 	preferences: {
 		autoPush: false,
 		commitTemplate: "",
@@ -69,7 +74,11 @@ export class ConfigManager {
 				email: this.conf.get("user.email") as string,
 			},
 			github: {
-				token: this.conf.get("github.token") as string,
+				encryptedToken: this.conf.get("github.encryptedToken") as string,
+			},
+			auth: {
+				machineKey: this.conf.get("auth.machineKey") as string,
+				hasMasterPassword: this.conf.get("auth.hasMasterPassword") as boolean,
 			},
 			preferences: {
 				autoPush: this.conf.get("preferences.autoPush") as boolean,

@@ -9,13 +9,6 @@ describe("Git Extras", () => {
 		expect(typeof git.remoteAdd).toBe("function");
 		expect(typeof git.remoteRemove).toBe("function");
 		expect(typeof git.remoteList).toBe("function");
-		expect(typeof git.worktreeList).toBe("function");
 		expect(typeof git.merge).toBe("function");
-		expect(typeof git.cherryPick).toBe("function");
-		expect(typeof git.clean).toBe("function");
-		expect(typeof git.archive).toBe("function");
-		expect(typeof git.bisectStart).toBe("function");
-		expect(typeof git.bisectReset).toBe("function");
-		expect(typeof git.bisectLog).toBe("function");
 	});
 });

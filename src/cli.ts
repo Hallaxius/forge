@@ -18,11 +18,9 @@ program
 	.version(pkg.version);
 
 import registerAlias from "./commands/alias.js";
-import registerArchive from "./commands/archive.js";
-import registerBisect from "./commands/bisect.js";
+
 import registerBranch from "./commands/branch.js";
-import registerCherryPick from "./commands/cherry-pick.js";
-import registerClean from "./commands/clean.js";
+import registerCi from "./commands/ci.js";
 import registerClone from "./commands/clone.js";
 import registerCommit from "./commands/commit.js";
 import registerConfig from "./commands/config.js";
@@ -30,9 +28,12 @@ import registerDiff from "./commands/diff.js";
 import registerFetch from "./commands/fetch.js";
 import registerHelp from "./commands/help.js";
 import registerInit from "./commands/init.js";
+import registerIssue from "./commands/issue.js";
 import registerLog from "./commands/log.js";
 import registerMerge from "./commands/merge.js";
+import registerPr from "./commands/pr.js";
 import registerPush from "./commands/push.js";
+import registerRelease from "./commands/release.js";
 import registerRemote from "./commands/remote.js";
 import registerReset from "./commands/reset.js";
 import registerSetup from "./commands/setup.js";
@@ -42,7 +43,6 @@ import registerSync from "./commands/sync.js";
 import registerTag from "./commands/tag.js";
 import registerUndo from "./commands/undo.js";
 import registerVersion from "./commands/version.js";
-import registerWorktree from "./commands/worktree.js";
 
 registerSetup(program);
 registerCommit(program);
@@ -64,12 +64,12 @@ registerVersion(program);
 registerClone(program);
 registerInit(program);
 registerRemote(program);
-registerWorktree(program);
+
+registerCi(program);
+registerIssue(program);
 registerMerge(program);
-registerCherryPick(program);
-registerClean(program);
-registerArchive(program);
-registerBisect(program);
+registerPr(program);
+registerRelease(program);
 
 if (process.argv.length <= 2) {
 	program.outputHelp();
