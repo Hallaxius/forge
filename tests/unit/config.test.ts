@@ -27,8 +27,6 @@ describe("ConfigManager", () => {
 
 	test("getPath returns path or undefined", () => {
 		const path = config.getPath();
-		// On Windows, conf.path might be undefined due to OS differences
-		// This is a known issue with the conf library
 		expect(path === undefined || typeof path === "string").toBe(true);
 	});
 

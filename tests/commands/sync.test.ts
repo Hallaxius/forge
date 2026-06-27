@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { Command } from "commander";
-import register from "../../src/commands/sync.js";
+import register from "../../src/commands/git/sync.js";
 
 describe("sync command", () => {
 	test("module exports register function", () => {

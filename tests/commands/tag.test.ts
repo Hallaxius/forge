@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { Command } from "commander";
-import register from "../../src/commands/tag.js";
+import register from "../../src/commands/git/tag.js";
 
 describe("tag command", () => {
 	test("module exports register function", () => {

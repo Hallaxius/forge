@@ -1,10 +1,6 @@
 import { mock, spyOn } from "bun:test";
 import type { Command } from "commander";
 
-// ============================================
-// Mock Types
-// ============================================
-
 export interface MockStatusResult {
 	current: string;
 	tracking: string;
@@ -42,10 +38,6 @@ export interface MockWorktreeEntry {
 	branch: string;
 	hash: string;
 }
-
-// ============================================
-// Mock Factories
-// ============================================
 
 export function createMockStatusResult(
 	overrides: Partial<MockStatusResult> = {},
@@ -115,10 +107,6 @@ export function createMockWorktreeEntry(
 	};
 }
 
-// ============================================
-// Mock Git Module
-// ============================================
-
 export function mockGitModule(
 	overrides: Partial<typeof import("../src/lib/git.js")> = {},
 ): void {
@@ -176,10 +164,6 @@ export function mockGitModule(
 	}));
 }
 
-// ============================================
-// Mock UI Module
-// ============================================
-
 export function mockUiModule(
 	overrides: Partial<typeof import("../src/lib/ui.js")> = {},
 ): void {
@@ -213,10 +197,6 @@ export function mockUiModule(
 	}));
 }
 
-// ============================================
-// Mock Logger Module
-// ============================================
-
 export function mockLoggerModule(): void {
 	mock.module("../src/lib/logger.js", () => ({
 		success: mock((msg: string) => console.log(`[SUCCESS] ${msg}`)),
@@ -228,10 +208,6 @@ export function mockLoggerModule(): void {
 		newline: mock(() => console.log()),
 	}));
 }
-
-// ============================================
-// Mock Auth Module
-// ============================================
 
 export function mockAuthModule(
 	overrides: Partial<typeof import("../src/lib/auth.js")> = {},
@@ -249,10 +225,6 @@ export function mockAuthModule(
 	}));
 }
 
-// ============================================
-// Mock Validators Module
-// ============================================
-
 export function mockValidatorsModule(
 	overrides: Partial<typeof import("../src/lib/validators.js")> = {},
 ): void {
@@ -267,10 +239,6 @@ export function mockValidatorsModule(
 		...overrides,
 	}));
 }
-
-// ============================================
-// Mock Config Module
-// ============================================
 
 export function mockConfigModule(
 	overrides: Partial<typeof import("../src/lib/config.js")> = {},
@@ -326,10 +294,6 @@ export function mockConfigModule(
 	});
 }
 
-// ============================================
-// Mock Conf (for alias)
-// ============================================
-
 export function mockConfModule(
 	overrides: Partial<typeof import("conf")> = {},
 ): void {
@@ -365,10 +329,6 @@ export function mockConfModule(
 	});
 }
 
-// ============================================
-// Mock Inquirer
-// ============================================
-
 export function mockInquirerModule(
 	overrides: Partial<typeof import("inquirer")> = {},
 ): void {
@@ -380,10 +340,6 @@ export function mockInquirerModule(
 	}));
 }
 
-// ============================================
-// Command Test Helper
-// ============================================
-
 export function createTestCommand(
 	register: (program: Command) => void,
 	args: string[] = [],
@@ -392,10 +348,6 @@ export function createTestCommand(
 	register(program);
 	return program.parseAsync(["node", "test", ...args]);
 }
-
-// ============================================
-// Console Spies Helper
-// ============================================
 
 export type ConsoleSpies = {
 	log: ReturnType<typeof spyOn>;

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { Command } from "commander";
-import register from "../../src/commands/stash.js";
+import register from "../../src/commands/git/stash.js";
 
 describe("stash command", () => {
 	test("module exports register function", () => {

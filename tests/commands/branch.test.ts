@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { Command } from "commander";
-import register from "../../src/commands/branch.js";
+import register from "../../src/commands/git/branch.js";
 
 describe("branch command", () => {
 	test("module exports register function", () => {

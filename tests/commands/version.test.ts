@@ -5,7 +5,7 @@ mock.module("../../src/version.const.js", () => ({
 }));
 
 import { Command } from "commander";
-import register from "../../src/commands/version.js";
+import register from "../../src/commands/git/version.js";
 
 describe("version command", () => {
 	test("module exports register function", () => {

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { Command } from "commander";
-import register from "../../src/commands/remote.js";
+import register from "../../src/commands/git/remote.js";
 
 describe("remote command", () => {
 	test("module exports register function", () => {

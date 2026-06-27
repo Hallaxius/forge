@@ -1,13 +1,11 @@
 import { beforeEach, describe, expect, mock, test } from "bun:test";
 import { Command } from "commander";
-import register from "../../src/commands/alias.js";
+import register from "../../src/commands/git/alias.js";
 
-// Shared mock store for Conf
 const mockStore: Record<string, string> = {};
 
 describe("alias command", () => {
 	beforeEach(() => {
-		// Clear the shared store before each test
 		Object.keys(mockStore).forEach((key) => {
 			delete mockStore[key];
 		});

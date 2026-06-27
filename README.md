@@ -1,161 +1,157 @@
 # @hallaxius/forge
 
-A modern Git CLI with professional UX
+> A modern, interactive CLI for Git and npm management.
 
-[![npm version](https://img.shields.io/npm/v/@hallaxius/forge.svg)](https://www.npmjs.com/package/@hallaxius/forge) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![npm downloads](https://img.shields.io/npm/dt/@hallaxius/forge.svg)](https://www.npmjs.com/package/@hallaxius/forge) [![npm weekly downloads](https://img.shields.io/npm/dw/@hallaxius/forge.svg)](https://www.npmjs.com/package/@hallaxius/forge) [![GitHub stars](https://img.shields.io/github/stars/hallaxius/forge.svg?style=social)](https://github.com/hallaxius/forge/stargazers) [![GitHub forks](https://img.shields.io/github/forks/hallaxius/forge.svg?style=social)](https://github.com/hallaxius/forge/network) [![GitHub issues](https://img.shields.io/github/issues/hallaxius/forge.svg)](https://github.com/hallaxius/forge/issues) [![GitHub closed issues](https://img.shields.io/github/issues-closed/hallaxius/forge.svg)](https://github.com/hallaxius/forge/issues?q=is%3Aissue+is%3Aclosed) [![Bun](https://img.shields.io/badge/Bun-1.0.0%2B-ff69b4.svg)](https://bun.sh) [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-green.svg)](https://nodejs.org) [![TypeScript](https://img.shields.io/badge/TypeScript-5.3%2B-blue.svg)](https://www.typescriptlang.org) [![Codecov](https://img.shields.io/codecov/c/github/hallaxius/forge.svg)](https://codecov.io/gh/hallaxius/forge) [![GitHub last commit](https://img.shields.io/github/last-commit/hallaxius/forge.svg)](https://github.com/hallaxius/forge/commits)
+[![npm version](https://img.shields.io/npm/v/@hallaxius/forge.svg)](https://www.npmjs.com/package/@hallaxius/forge)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Bun](https://img.shields.io/badge/Bun-1.0.0%2B-ff69b4.svg)](https://bun.sh)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-green.svg)](https://nodejs.org)
+
+---
+
+## Features
+
+- **Git Management**: 30+ commands (status, commit, push, branch, merge, etc.)
+- **GitHub Integration**: Issues, PRs, Releases, CI Checks, Device Flow Auth
+- **npm Management**: Publish, List Packages, Orgs, Dist-Tags
+- **Multi-Mode CLI**: Switch between `base`, `git`, and `npm` modes
+- **Interactive UI**: Colors, Spinners, Prompts, Tables
+- **Token Encryption**: AES-GCM (256-bit key) for secure storage
+- **Custom Aliases**: Shortcuts for frequently used commands
+
+---
 
 ## Installation
 
-Requires [Bun](https://bun.sh) (recommended) or Node.js >= 18.0.0.
-
+### Using Bun (Recommended)
 ```bash
-# Using npm
-npm install -g @hallaxius/forge
-
-# Using bun
-bun install -g @hallaxius/forge
+bun add -g @hallaxius/forge
 ```
 
-## Configuration Tutorial (`fg setup`)
+### Using npm
+```bash
+npm install -g @hallaxius/forge
+```
 
-Run `fg setup` and follow the interactive steps:
+---
 
-1. **Name** — your name for commits
-2. **Email** — your email for commits
-3. **GitHub Token** (optional) — for authenticated operations
-4. **Encrypt token?** — if yes, set a master password (AES-GCM)
-5. **Verification** — confirms Git is installed
+## Usage
 
-Config saved to `~/.forge/config.json`. Token is encrypted.
+### Start the CLI
+```bash
+fg
+```
 
-To reconfigure: run `fg setup` again.
+### Git Mode
+```bash
+fg git
+fg git status
+fg git commit -m "feat: add new feature"
+fg git push
+```
 
-## Commands (30)
+### npm Mode
+```bash
+fg npm
+fg npm whoami
+fg npm publish
+```
 
-### Configuration
+### One-Shot Commands
+```bash
+fg git status
+fg npm whoami
+fg version
+```
+
+---
+
+## Commands
+
+### Base
 | Command | Description |
 |---------|-------------|
-| `fg setup` | Initial interactive configuration |
-| `fg config` | Show current config |
-| `fg config --edit` | Open in `$EDITOR` (vim default) |
-| `fg reset` | Delete all configuration (with confirmation) |
+| `fg` | Start interactive CLI |
+| `fg mode <target>` | Switch to `npm`, `git`, or `base` |
+| `fg help` | Show help |
 | `fg version` | Show version |
-| `fg help` | Full help |
-| `fg --help` | Quick help |
-| `fg account` | Display account information (local and GitHub) |
+| `fg exit` | Exit |
 
-### Repositories
+### Git
 | Command | Description |
 |---------|-------------|
-| `fg clone <url\|org/repo> [dir] [--ssh] [--depth N] [--branch X] [--recurse-submodules] [--cd]` | Clone repo; supports `org/repo` shorthand; `--cd` prints `cd dir` for `eval` |
-| `fg init [dir] [--initial-commit] [--branch main]` | Initialize repo; `--initial-commit` creates empty commit |
-| `fg remote` | List remotes |
-| `fg remote add <name> <url>` | Add remote |
-| `fg remote remove <name>` | Remove remote (asks confirmation) |
-| `fg remote set-url <name> <url>` | Change remote URL |
-| `fg remote rename <old> <new>` | Rename remote |
-| `fg remote get-url <name>` | Show remote URL |
+| `fg git setup` | Configure GitHub auth |
+| `fg git status` | Repository status |
+| `fg git commit` | Create commit |
+| `fg git push` | Push to remote |
+| `fg git branch` | List branches |
+| `fg git branch -n <name>` | Create branch |
+| `fg git branch -s <name>` | Switch branch |
+| `fg git remote` | List remotes |
+| `fg git remote add <name> <url>` | Add remote |
+| `fg git clone <url>` | Clone repository |
+| `fg git pull` | Pull from remote |
+| `fg git fetch` | Fetch from remote |
+| `fg git stash` | Stash changes |
+| `fg git tag` | List tags |
+| `fg git merge <branch>` | Merge branch |
+| `fg git log` | Commit history |
+| `fg git diff` | Show changes |
+| `fg git undo` | Undo last commit |
+| `fg git alias` | Manage aliases |
+| `fg git ci` | Check CI status |
+| `fg git issue` | Manage issues |
+| `fg git pr` | Manage pull requests |
+| `fg git release` | Create release |
 
-### Commits
+### npm
 | Command | Description |
 |---------|-------------|
-| `fg commit [-m "msg"] [--amend]` | Interactive commit (type, scope, description) or quick with `-m`; `--amend` amends last |
-| `fg undo` | Undo last commit keeping changes (soft reset) |
-| `fg log [-n 10]` | Formatted history (hash, date, author, message) |
-| `fg diff [--staged]` | Unstaged or staged diff |
+| `fg npm setup` | Configure npm auth |
+| `fg npm whoami` | Show npm user |
+| `fg npm publish` | Publish package |
+| `fg npm ls` | List packages |
+| `fg npm package <name>` | Show package info |
+| `fg npm org list` | List organizations |
+| `fg npm org members` | Manage members |
 
-### Branches
-| Command | Description |
-|---------|-------------|
-| `fg branch` | List branches (current marked with `*`) |
-| `fg branch -n <name>` | Create new branch |
-| `fg branch -d <name> [--force]` | Delete branch (`--force` = `-D`) |
-| `fg branch -s <name>` | Switch to branch |
+---
 
-### Push / Pull / Sync
-| Command | Description |
-|---------|-------------|
-| `fg push [--force]` | Push to origin (confirms first; `--force` requires extra confirmation) |
-| `fg sync` | Pull with rebase (`git pull --rebase`) |
-| `fg fetch` | Fetch from remote |
+## Authentication
 
-### Status
-| Command | Description |
-|---------|-------------|
-| `fg status` | Branch, ahead/behind, modified files (table), last 3 commits |
-| `fg st` | Short status |
+### GitHub
+```bash
+fg git setup
+```
+- **Device Flow (Recommended)**: Open browser to authorize.
+- **Personal Access Token**: Manually enter a PAT from [GitHub Settings > Tokens](https://github.com/settings/tokens).
 
-### Stash
-| Command | Description |
-|---------|-------------|
-| `fg stash` | Save stash (prompts for message) |
-| `fg stash --pop` | Apply and drop latest stash |
-| `fg stash --list` | List stashes |
+> Tokens are encrypted using AES-GCM and stored in `~/.config/forge/config.json`.
 
-### Tags
-| Command | Description |
-|---------|-------------|
-| `fg tag -n <name> [-m "msg"]` | Create tag (annotated with `-m`) |
-| `fg tag --list` | List tags |
+### npm
+```bash
+fg npm setup
+```
+- Enter your npm token from [npmjs.com/settings/tokens](https://www.npmjs.com/settings/tokens).
 
-### Merge / Cherry-pick
-| Command | Description |
-|---------|-------------|
-| `fg merge <branch> [--no-ff] [--squash] [--no-commit]` | Merge with options |
-| `fg cherry-pick <commits...> [--no-commit] [--mainline N]` | Apply commits |
-| `fg cherry-pick --continue` | Continue after conflict |
-| `fg cherry-pick --abort` | Abort cherry-pick |
-
-### Clean
-| Command | Description |
-|---------|-------------|
-| `fg clean [paths...] [--dry-run] [--force] [--exclude pattern]` | Remove untracked files; `--dry-run` shows only; without `--force` asks confirmation |
-
-### GitHub Integration
-| Command | Description |
-|---------|-------------|
-| `fg ci` | Check CI status for the repository |
-| `fg issue list [-s, --state <state>]` | List GitHub issues (filter by state: open, closed, all) |
-| `fg issue create [-t, --title <title>]` | Create a new GitHub issue |
-| `fg pr list [-s, --state <state>]` | List pull requests (filter by state: open, closed, all) |
-| `fg pr create [-t, --title <title>] [-H, --head <branch>] [-B, --base <branch>]` | Create a new pull request |
-| `fg release <tag> [-n, --name <name>]` | Create a GitHub release |
-
-### Aliases
-| Command | Description |
-|---------|-------------|
-| `fg alias add <name> <command>` | Add alias (e.g., `fg alias add g commit`) |
-| `fg alias list` | List aliases |
-| `fg alias remove <name>` | Remove alias |
+---
 
 ## Configuration
 
-File: `~/.forge/config.json`
+| File | Location | Description |
+|------|----------|-------------|
+| Config | `~/.config/forge/config.json` | User settings, tokens, aliases |
 
-```json
-{
-  "user": { "name": "", "email": "" },
-  "github": { "token": "encrypted" },
-  "preferences": { "autoPush": false, "commitTemplate": "conventional", "editor": "vim" },
-  "clones": [],
-  "aliases": {}
-}
-```
+### Commands
+| Command | Description |
+|---------|-------------|
+| `fg setup` | Initial setup |
+| `fg config` | View config |
+| `fg config --edit` | Edit config |
+| `fg reset` | Reset all config |
 
-- GitHub token encrypted with AES-GCM (Web Crypto API)
-- `clones`: last 10 clones for `fg clone --list`
-- `aliases`: custom shortcuts
-
-## Dependencies
-
-- **[Bun](https://bun.sh)** (recommended) or **Node.js >= 18.0.0**
-- **[@octokit/rest](https://github.com/octokit/rest.js)** - GitHub API client
-- **[isomorphic-git](https://github.com/isomorphic-git/isomorphic-git)** - Git operations
-- **[commander](https://github.com/tj/commander.js)** - CLI framework
-- **[inquirer](https://github.com/SBoudrias/Inquirer.js)** - Interactive prompts
-- **[chalk](https://github.com/chalk/chalk)** - Terminal colors
-- **[ora](https://github.com/sindresorhus/ora)** - Spinners
+---
 
 ## License
 
-MIT
+MIT – see [LICENSE](LICENSE) for details.
