@@ -21,9 +21,9 @@
 		"lint:fix": "biome check --write --unsafe",
 		"prepublishOnly": "bun run build && bun test",
 		"prepack": "bun run build",
-		"patch": "bun version patch && bun publish",
-		"minor": "bun version minor && bun publish",
-		"major": "bun version major && bun publish"
+		"patch": "npm version patch && bun publish",
+		"minor": "npm version minor && bun publish",
+		"major": "npm version major && bun publish"
 	},
 	"dependencies": {
 		"@octokit/rest": "^21.1.0",
