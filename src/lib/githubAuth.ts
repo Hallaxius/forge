@@ -20,8 +20,8 @@ export interface AccessTokenResponse {
  * GitHub OAuth client configuration
  */
 const GITHUB_OAUTH_CONFIG = {
-	client_id: process.env.GITHUB_CLIENT_ID || "YOUR_GITHUB_CLIENT_ID",
-	scope: "user:email repo read:org",
+	client_id: process.env.GITHUB_CLIENT_ID || "Ov23lib0kLONoYtd9AA3",
+	scope: "user:email repo read:org workflow",
 	device_auth_url: "https://github.com/login/device/code",
 	token_url: "https://github.com/login/oauth/access_token",
 };

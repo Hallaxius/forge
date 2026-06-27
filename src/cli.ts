@@ -114,6 +114,8 @@ function _startReplMode(mode: "npm" | "git") {
 		chalk.green(`\nEntering ${mode.toUpperCase()} mode. Type "exit" to leave.`),
 	);
 
+	const program = createProgramForMode(mode);
+
 	const ask = () => {
 		rl.question(`${mode}> `, async (input) => {
 			const trimmed = input.trim();
@@ -121,6 +123,7 @@ function _startReplMode(mode: "npm" | "git") {
 			if (trimmed === "exit" || trimmed === "quit") {
 				console.log(chalk.green("\nExiting to base mode..."));
 				rl.close();
+				ModeManager.reset();
 				process.exit(0);
 				return;
 			}
@@ -131,7 +134,6 @@ function _startReplMode(mode: "npm" | "git") {
 			}
 
 			try {
-				const program = createProgramForMode(mode);
 				program.parse(trimmed.split(" "), { from: "user" });
 			} catch (err) {
 				console.error(
@@ -161,6 +163,7 @@ function startReplBaseMode(program: Command) {
 			if (trimmed === "exit" || trimmed === "quit") {
 				console.log(chalk.green("\nExiting Forge CLI..."));
 				rl.close();
+				ModeManager.reset();
 				process.exit(0);
 				return;
 			}
@@ -196,6 +199,7 @@ if (args.length >= 2 && (args[0] === "npm" || args[0] === "git")) {
 	const program = createProgramForMode(service);
 
 	program.parse(commandArgs, { from: "user" });
+	process.exit(0);
 } else if (
 	args.length === 1 &&
 	(args[0] === "npm" || args[0] === "git" || args[0] === "base")
@@ -213,15 +217,13 @@ if (args.length >= 2 && (args[0] === "npm" || args[0] === "git")) {
 
 		startReplBaseMode(program);
 	} else {
-		const program = createProgramForMode(targetMode);
-
 		console.log(`\nForge CLI - ${targetMode.toUpperCase()} Mode`);
 		console.log(
 			`Type commands without prefix. Use 'mode <target>' to switch, 'exit' to quit.`,
 		);
 		console.log(`Prompt: ${ModeManager.getPrompt()}`);
 
-		program.parse(args, { from: "user" });
+		_startReplMode(targetMode);
 	}
 } else {
 	ModeManager.setMode("base");

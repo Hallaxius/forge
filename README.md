@@ -12,12 +12,13 @@
 ## Features
 
 - **Git Management**: 30+ commands (status, commit, push, branch, merge, etc.)
-- **GitHub Integration**: Issues, PRs, Releases, CI Checks, Device Flow Auth
+- **GitHub Integration**: Issues, PRs, Releases, CI Checks, OAuth 2.0 Device Flow Auth
 - **npm Management**: Publish, List Packages, Orgs, Dist-Tags
 - **Multi-Mode CLI**: Switch between `base`, `git`, and `npm` modes
 - **Interactive UI**: Colors, Spinners, Prompts, Tables
 - **Token Encryption**: AES-GCM (256-bit key) for secure storage
 - **Custom Aliases**: Shortcuts for frequently used commands
+- **Auto-User Data**: Automatically fetches name/email from GitHub and npm APIs
 
 ---
 
@@ -58,10 +59,90 @@ fg npm publish
 ```
 
 ### One-Shot Commands
+Execute commands directly without entering the REPL:
 ```bash
 fg git status
 fg npm whoami
 fg version
+```
+
+### Interactive Modes
+Enter persistent REPL mode for git or npm:
+```bash
+fg git
+# Now in git mode. Type commands without prefix.
+git> status
+git> push
+git> exit
+
+fg npm
+# Now in npm mode.
+npm> whoami
+npm> publish
+npm> exit
+```
+
+---
+
+## Authentication
+
+### GitHub (Default: OAuth 2.0 Device Flow)
+Forge uses **OAuth 2.0 Device Flow** by default for GitHub authentication. Name and email are automatically fetched from the GitHub API.
+
+Run:
+```bash
+fg git setup
+```
+This uses **OAuth 2.0 Device Flow** by default. Follow these steps:
+1. Run the command above.
+2. Open the provided URL in your browser (e.g., `https://github.com/login/device`).
+3. Enter the **user code** displayed in the terminal.
+4. Authorize the **Forge CLI** application.
+5. Name and email are **automatically fetched** from GitHub.
+
+**Required OAuth Scopes:**
+- `user:email` – Read your email.
+- `repo` – Full access to repositories (public and private).
+- `read:org` – Read organization data.
+- `workflow` – Manage GitHub Actions.
+
+**Token Expiration:**
+- OAuth tokens expire after **1 hour** (GitHub default).
+- If expired, run `fg git setup` again to renew.
+
+**Alternative: Personal Access Token (PAT)**
+You can also use a PAT directly:
+```bash
+fg git setup -t YOUR_GITHUB_PAT
+```
+Generate a PAT from [GitHub Settings > Tokens](https://github.com/settings/tokens) with the same scopes as above.
+
+> **Security:** All tokens are encrypted using **AES-GCM (256-bit)** and stored in `~/.config/forge/config.json`.
+
+---
+
+### npm (Granular Access Tokens)
+Forge uses **Granular Access Tokens** for npm authentication. Name and email are automatically fetched from the npm API.
+
+#### Granular Access Token Setup
+```bash
+fg npm setup
+```
+1. Run the command above.
+2. Provide your **Granular Access Token** from [npmjs.com/settings/~/tokens](https://www.npmjs.com/settings/~/tokens).
+3. Name and email are **automatically fetched** from npm.
+4. If name/email are not available in the npm profile, you will be prompted to enter them.
+
+**Token Features:**
+- Restrict to specific packages or scopes.
+- Set expiration date.
+- Limit by IP ranges (CIDR).
+- Bypass 2FA (optional).
+
+**Alternative: Direct Token Input**
+You can provide the token directly:
+```bash
+fg npm setup -t YOUR_NPM_TOKEN
 ```
 
 ---
@@ -80,7 +161,7 @@ fg version
 ### Git
 | Command | Description |
 |---------|-------------|
-| `fg git setup` | Configure GitHub auth |
+| `fg git setup` | Configure GitHub auth (OAuth 2.0 Device Flow by default) |
 | `fg git status` | Repository status |
 | `fg git commit` | Create commit |
 | `fg git push` | Push to remote |
@@ -103,36 +184,22 @@ fg version
 | `fg git issue` | Manage issues |
 | `fg git pr` | Manage pull requests |
 | `fg git release` | Create release |
+| `fg git logout` | Remove GitHub token |
 
 ### npm
 | Command | Description |
 |---------|-------------|
-| `fg npm setup` | Configure npm auth |
+| `fg npm setup` | Configure npm auth (Granular Access Token) |
 | `fg npm whoami` | Show npm user |
 | `fg npm publish` | Publish package |
 | `fg npm ls` | List packages |
 | `fg npm package <name>` | Show package info |
 | `fg npm org list` | List organizations |
 | `fg npm org members` | Manage members |
-
----
-
-## Authentication
-
-### GitHub
-```bash
-fg git setup
-```
-- **Device Flow (Recommended)**: Open browser to authorize.
-- **Personal Access Token**: Manually enter a PAT from [GitHub Settings > Tokens](https://github.com/settings/tokens).
-
-> Tokens are encrypted using AES-GCM and stored in `~/.config/forge/config.json`.
-
-### npm
-```bash
-fg npm setup
-```
-- Enter your npm token from [npmjs.com/settings/tokens](https://www.npmjs.com/settings/tokens).
+| `fg npm org show` | Show organization details |
+| `fg npm dist-tag` | Manage dist-tags |
+| `fg npm deprecate` | Deprecate package versions |
+| `fg npm logout` | Remove npm token |
 
 ---
 
@@ -145,10 +212,34 @@ fg npm setup
 ### Commands
 | Command | Description |
 |---------|-------------|
-| `fg setup` | Initial setup |
 | `fg config` | View config |
 | `fg config --edit` | Edit config |
 | `fg reset` | Reset all config |
+
+---
+
+## Version Management
+
+Use these scripts to bump the version and publish:
+
+```bash
+# Patch version (bug fixes)
+npm run patch
+
+# Minor version (new features, backward-compatible)
+npm run minor
+
+# Major version (breaking changes)
+npm run major
+```
+
+Or manually:
+```bash
+npm version patch
+npm version minor
+npm version major
+npm publish
+```
 
 ---
 

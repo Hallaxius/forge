@@ -1,5 +1,17 @@
 import { ConfigManager } from "./config.js";
 
+export interface NpmTokenInfo {
+	id: string;
+	token: string;
+	created: string;
+	cidrWhitelist?: string;
+	permissions: {
+		packages: "read-only" | "read-and-write" | "no-access";
+		scopes: string[];
+	};
+	expiration?: string;
+}
+
 export class NpmClient {
 	private readonly registry = "https://registry.npmjs.org";
 	private readonly api = "https://api.npmjs.org";
@@ -11,6 +23,60 @@ export class NpmClient {
 			throw new Error("npm token not configured. Run 'fg npm setup'");
 		}
 		return token;
+	}
+
+	async getTokenInfo(): Promise<NpmTokenInfo | null> {
+		const config = new ConfigManager();
+		const token = config.get("npm.token");
+		if (!token) {
+			return null;
+		}
+
+		try {
+			const response = await fetch(`${this.api}/-/npm/v1/tokens`, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+
+			if (!response.ok) {
+				return null;
+			}
+
+			const tokens: NpmTokenInfo[] = await response.json();
+			return tokens.find((t) => t.token === token) || null;
+		} catch {
+			return null;
+		}
+	}
+
+	async validateTokenScopes(
+		requiredScopes: string[] = ["read:packages", "write:packages"],
+	): Promise<boolean> {
+		const tokenInfo = await this.getTokenInfo();
+		if (!tokenInfo) {
+			return false;
+		}
+
+		const hasAllScopes = requiredScopes.every((scope) =>
+			tokenInfo.permissions.scopes.includes(scope),
+		);
+
+		return hasAllScopes;
+	}
+
+	async validateToken(): Promise<boolean> {
+		try {
+			const token = await this.getToken();
+			const response = await fetch(`${this.api}/whoami`, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+			return response.ok;
+		} catch {
+			return false;
+		}
 	}
 
 	async whoami() {

@@ -123,23 +123,30 @@ export async function resolveToken(): Promise<string> {
 	const config = new ConfigManager();
 	const encryptedToken = config.get("github.encryptedToken") as string;
 	if (!encryptedToken) {
-		throw new Error("No GitHub token configured. Run 'fg setup' first.");
+		throw new Error("No GitHub token configured. Run 'fg git setup -w' first.");
 	}
 
-	const hasMasterPassword = config.get("auth.hasMasterPassword") as boolean;
+	try {
+		const hasMasterPassword = config.get("auth.hasMasterPassword") as boolean;
 
-	let machineKey: string;
-	if (hasMasterPassword) {
-		const encryptedKey = config.get("auth.machineKey") as string;
-		const password = await promptPassword();
-		machineKey = await decryptToken(encryptedKey, password);
-	} else {
-		machineKey = config.get("auth.machineKey") as string;
+		let machineKey: string;
+		if (hasMasterPassword) {
+			const encryptedKey = config.get("auth.machineKey") as string;
+			const password = await promptPassword();
+			machineKey = await decryptToken(encryptedKey, password);
+		} else {
+			machineKey = config.get("auth.machineKey") as string;
+		}
+
+		const token = await decryptToken(encryptedToken, machineKey);
+		cachedToken = token;
+		return token;
+	} catch (_err) {
+		clearTokenCache();
+		throw new Error(
+			"GitHub token is invalid or expired. Run 'fg git setup -w' to authenticate again.",
+		);
 	}
-
-	const token = await decryptToken(encryptedToken, machineKey);
-	cachedToken = token;
-	return token;
 }
 
 export async function resolveTokenWithPassword(
@@ -150,7 +157,7 @@ export async function resolveTokenWithPassword(
 	const config = new ConfigManager();
 	const encryptedToken = config.get("github.encryptedToken") as string;
 	if (!encryptedToken) {
-		throw new Error("No GitHub token configured. Run 'fg setup' first.");
+		throw new Error("No GitHub token configured. Run 'fg git setup -w' first.");
 	}
 
 	const hasMasterPassword = config.get("auth.hasMasterPassword") as boolean;
@@ -166,7 +173,14 @@ export async function resolveTokenWithPassword(
 		machineKey = config.get("auth.machineKey") as string;
 	}
 
-	const token = await decryptToken(encryptedToken, machineKey);
-	cachedToken = token;
-	return token;
+	try {
+		const token = await decryptToken(encryptedToken, machineKey);
+		cachedToken = token;
+		return token;
+	} catch (_err) {
+		clearTokenCache();
+		throw new Error(
+			"GitHub token is invalid or expired. Run 'fg git setup -w' to authenticate again.",
+		);
+	}
 }

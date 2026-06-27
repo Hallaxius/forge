@@ -10,9 +10,12 @@ import { validateEmail } from "../../lib/validators.js";
 export default function register(program: Command): void {
 	program
 		.command("setup")
-		.description("Configure GitHub with authentication")
-		.option("-w, --web", "Authenticate via browser (Device Flow - recommended)")
-		.option("-t, --token <token>", "Provide GitHub token directly")
+		.description("Configure GitHub with OAuth 2.0 Device Flow (default)")
+		.option(
+			"-t, --token <token>",
+			"Provide GitHub Personal Access Token directly",
+		)
+		.option("-w, --web", "Authenticate via browser (Device Flow - explicit)")
 		.action(async (options) => {
 			try {
 				const config = new ConfigManager();
@@ -27,20 +30,14 @@ export default function register(program: Command): void {
 				}
 
 				newline();
-				text("Starting GitHub setup...");
+				text("Starting GitHub setup with OAuth 2.0 Device Flow (default)...");
 				newline();
-
-				const name = await input("Your name");
-
-				let email = await input("Your email");
-				while (!validateEmail(email)) {
-					error("Invalid email format.");
-					email = await input("Your email");
-				}
 
 				let rawToken: string;
 
-				if (options.web) {
+				if (options.token) {
+					rawToken = options.token;
+				} else {
 					try {
 						rawToken = await githubDeviceFlow();
 					} catch (authErr) {
@@ -49,37 +46,26 @@ export default function register(program: Command): void {
 							authErr.message.includes("denied")
 						) {
 							error(
-								"GitHub authorization denied. Please try again or use manual token input.",
+								"GitHub authorization denied. Please try again or use a Personal Access Token with -t.",
 							);
 						} else if (
 							authErr instanceof Error &&
 							authErr.message.includes("timeout")
 						) {
-							error("GitHub authorization timeout. Please try again.");
+							error(
+								"GitHub authorization timeout. Please try again or use a Personal Access Token with -t.",
+							);
 						} else {
 							error(
-								`GitHub authentication failed: ${authErr instanceof Error ? authErr.message : String(authErr)}`,
+								`GitHub OAuth failed: ${authErr instanceof Error ? authErr.message : String(authErr)}`,
 							);
 						}
-						return;
-					}
-				} else if (options.token) {
-					rawToken = options.token;
-				} else {
-					rawToken = await input(
-						"GitHub token (required for remote operations)",
-						{ type: "password" },
-					);
-					if (!rawToken) {
-						error(
-							"GitHub token is required. Get one at https://github.com/settings/tokens",
-						);
 						return;
 					}
 				}
 
 				newline();
-				text("Validating GitHub token...");
+				text("Validating GitHub token and fetching user data...");
 
 				let account: any;
 				try {
@@ -88,6 +74,23 @@ export default function register(program: Command): void {
 				} catch (_validationErr) {
 					error("Invalid GitHub token. Please check your token and try again.");
 					return;
+				}
+
+				newline();
+
+				let name = account.name;
+				let email = account.email;
+
+				if (!name) {
+					name = await input("Your name");
+				}
+
+				if (!email || !validateEmail(email)) {
+					email = await input("Your email");
+					while (!validateEmail(email)) {
+						error("Invalid email format.");
+						email = await input("Your email");
+					}
 				}
 
 				const useMasterPassword = await confirm(

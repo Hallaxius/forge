@@ -3,28 +3,18 @@ import { join } from "node:path";
 import Conf from "conf";
 
 export interface ForgeConfig {
-	user: {
-		name: string;
-		email: string;
-	};
-	github: {
-		encryptedToken: string;
-	};
-	auth: {
-		machineKey: string;
-		hasMasterPassword: boolean;
-	};
-	preferences: {
-		autoPush: boolean;
-		commitTemplate: string;
-		editor: string;
-	};
+	user: { name: string; email: string };
+	github: { encryptedToken: string };
+	npm: { token: string };
+	auth: { machineKey: string; hasMasterPassword: boolean };
+	preferences: { autoPush: boolean; commitTemplate: string; editor: string };
 	clones: string[];
 }
 
 const DEFAULTS: ForgeConfig = {
 	user: { name: "", email: "" },
 	github: { encryptedToken: "" },
+	npm: { token: "" },
 	auth: { machineKey: "", hasMasterPassword: false },
 	preferences: {
 		autoPush: false,
@@ -75,6 +65,9 @@ export class ConfigManager {
 			},
 			github: {
 				encryptedToken: this.conf.get("github.encryptedToken") as string,
+			},
+			npm: {
+				token: this.conf.get("npm.token") as string,
 			},
 			auth: {
 				machineKey: this.conf.get("auth.machineKey") as string,
