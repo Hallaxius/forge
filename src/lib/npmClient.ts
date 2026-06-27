@@ -121,10 +121,10 @@ export class NpmClient {
 		args.push(packagePath);
 
 		return new Promise((resolve, reject) => {
-			const npm = spawn("npm", args, { stdio: "inherit" });
+			const npm = spawn("bun", args, { stdio: "inherit" });
 			npm.on("close", (code) => {
 				if (code === 0) resolve();
-				else reject(new Error(`npm publish failed with code ${code}`));
+				else reject(new Error(`bun publish failed with code ${code}`));
 			});
 		});
 	}

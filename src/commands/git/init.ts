@@ -13,7 +13,7 @@ export default function register(program: Command): void {
 			try {
 				const targetDir = dir || ".";
 
-				await git.init(dir, { initialBranch: options.branch });
+				await git.init(targetDir, { initialBranch: options.branch });
 
 				if (options.initialCommit) {
 					await git.commit("Initial commit");

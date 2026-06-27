@@ -1,10 +1,11 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { createInterface } from "node:readline";
+import { createInterface, type Interface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import chalk from "chalk";
 import { Command } from "commander";
 import { ModeManager } from "./lib/modeManager.js";
+import { cleanup, setReplInputHandler } from "./lib/ui.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -104,10 +105,16 @@ function createProgramForMode(mode: ModeManager.Mode): Command {
 	return program;
 }
 
+let replRl: Interface | null = null;
+let isReplActive = false;
+
 function _startReplMode(mode: "npm" | "git") {
-	const rl = createInterface({
+	cleanup();
+
+	replRl = createInterface({
 		input: process.stdin,
 		output: process.stdout,
+		terminal: true,
 	});
 
 	console.log(
@@ -115,14 +122,48 @@ function _startReplMode(mode: "npm" | "git") {
 	);
 
 	const program = createProgramForMode(mode);
+	isReplActive = true;
+
+	setReplInputHandler((input: string) => {
+		if (!isReplActive) return;
+
+		const trimmed = input.trim();
+		if (trimmed === "exit" || trimmed === "quit") {
+			console.log(chalk.green("\nExiting to base mode..."));
+			if (replRl) {
+				replRl.close();
+				replRl = null;
+			}
+			isReplActive = false;
+			ModeManager.reset();
+			process.exit(0);
+			return;
+		}
+
+		if (!trimmed) {
+			return;
+		}
+
+		try {
+			program.parse(trimmed.split(" "), { from: "user" });
+		} catch (err) {
+			console.error(
+				chalk.red(`Error: ${err instanceof Error ? err.message : String(err)}`),
+			);
+		}
+	});
 
 	const ask = () => {
-		rl.question(`${mode}> `, async (input) => {
+		if (!isReplActive || !replRl) return;
+
+		replRl.question(`${mode}> `, async (input) => {
 			const trimmed = input.trim();
 
 			if (trimmed === "exit" || trimmed === "quit") {
 				console.log(chalk.green("\nExiting to base mode..."));
-				rl.close();
+				replRl.close();
+				replRl = null;
+				isReplActive = false;
 				ModeManager.reset();
 				process.exit(0);
 				return;
@@ -147,22 +188,74 @@ function _startReplMode(mode: "npm" | "git") {
 		});
 	};
 
+	globalThis.pauseRepl = () => {
+		isReplActive = false;
+		if (replRl) {
+			replRl.pause();
+		}
+	};
+
+	globalThis.resumeRepl = () => {
+		isReplActive = true;
+		if (replRl) {
+			replRl.resume();
+		}
+	};
+
 	ask();
 }
 
 function startReplBaseMode(program: Command) {
-	const rl = createInterface({
+	cleanup();
+
+	replRl = createInterface({
 		input: process.stdin,
 		output: process.stdout,
+		terminal: true,
+	});
+
+	isReplActive = true;
+
+	setReplInputHandler((input: string) => {
+		if (!isReplActive) return;
+
+		const trimmed = input.trim();
+		if (trimmed === "exit" || trimmed === "quit") {
+			console.log(chalk.green("\nExiting Forge CLI..."));
+			if (replRl) {
+				replRl.close();
+				replRl = null;
+			}
+			isReplActive = false;
+			ModeManager.reset();
+			process.exit(0);
+			return;
+		}
+
+		if (!trimmed) {
+			return;
+		}
+
+		try {
+			program.parse(trimmed.split(" "), { from: "user" });
+		} catch (err) {
+			console.error(
+				chalk.red(`Error: ${err instanceof Error ? err.message : String(err)}`),
+			);
+		}
 	});
 
 	const ask = () => {
-		rl.question(`${chalk.gray("base")}> `, async (input) => {
+		if (!isReplActive || !replRl) return;
+
+		replRl.question(`${chalk.gray("base")}> `, async (input) => {
 			const trimmed = input.trim();
 
 			if (trimmed === "exit" || trimmed === "quit") {
 				console.log(chalk.green("\nExiting Forge CLI..."));
-				rl.close();
+				replRl.close();
+				replRl = null;
+				isReplActive = false;
 				ModeManager.reset();
 				process.exit(0);
 				return;
@@ -185,6 +278,20 @@ function startReplBaseMode(program: Command) {
 
 			ask();
 		});
+	};
+
+	globalThis.pauseRepl = () => {
+		isReplActive = false;
+		if (replRl) {
+			replRl.pause();
+		}
+	};
+
+	globalThis.resumeRepl = () => {
+		isReplActive = true;
+		if (replRl) {
+			replRl.resume();
+		}
 	};
 
 	ask();

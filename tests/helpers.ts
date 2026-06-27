@@ -297,6 +297,8 @@ export function mockConfigModule(
 export function mockConfModule(
 	overrides: Partial<typeof import("conf")> = {},
 ): void {
+	const mockStore: Record<string, string> = {};
+
 	mock.module("conf", () => {
 		class MockConf {
 			get<T>(key: string): T | undefined {
@@ -327,17 +329,6 @@ export function mockConfModule(
 			...overrides,
 		};
 	});
-}
-
-export function mockInquirerModule(
-	overrides: Partial<typeof import("inquirer")> = {},
-): void {
-	mock.module("inquirer", () => ({
-		default: {
-			prompt: mock(() => Promise.resolve({ value: "mock_value" })),
-		},
-		...overrides,
-	}));
 }
 
 export function createTestCommand(

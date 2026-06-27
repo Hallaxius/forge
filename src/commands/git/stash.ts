@@ -32,7 +32,7 @@ export default function register(program: Command): void {
 					return;
 				}
 
-				const _message = await input("Stash message (optional)");
+				await input("Stash message (optional)");
 				const result = await withSpinner("Stashing...", () => git.stash());
 				text(`Stash saved: ${result}`);
 			} catch (err) {

@@ -2,7 +2,7 @@ import type { Command } from "commander";
 import { ConfigManager } from "../../lib/config.js";
 import { error, newline, text, warning } from "../../lib/logger.js";
 import { NpmClient } from "../../lib/npmClient.js";
-import { confirm, input, withSpinner } from "../../lib/ui.js";
+import { confirm, input, password, withSpinner } from "../../lib/ui.js";
 import { validateEmail } from "../../lib/validators.js";
 
 export default function register(program: Command): void {
@@ -10,10 +10,6 @@ export default function register(program: Command): void {
 		.command("setup")
 		.description("Configure npm with Granular Access Token")
 		.option("-t, --token <token>", "Provide Granular Access Token directly")
-		.option(
-			"-s, --scopes <scopes>",
-			"Required scopes (comma-separated, e.g., 'read:packages,write:packages')",
-		)
 		.option(
 			"-w, --web",
 			"Show instructions for creating a Granular Access Token",
@@ -52,9 +48,8 @@ export default function register(program: Command): void {
 
 				let rawToken = options.token;
 				if (!rawToken) {
-					rawToken = await input(
+					rawToken = await password(
 						"Granular Access Token (required for npm operations)",
-						{ type: "password" },
 					);
 					if (!rawToken) {
 						error(

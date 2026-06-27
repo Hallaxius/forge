@@ -1,6 +1,6 @@
 import type { Command } from "commander";
 import { error, text } from "../../lib/logger.js";
-import { ModeManager } from "../../lib/modeManager.js";
+import { type Mode, ModeManager } from "../../lib/modeManager.js";
 
 export default function register(program: Command): void {
 	program

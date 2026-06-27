@@ -7,7 +7,6 @@ export default function register(program: Command): void {
 	program
 		.command("config")
 		.description("Manage configuration")
-		.option("--show", "Show config")
 		.option("--edit", "Edit config in editor")
 		.action(async (options) => {
 			try {

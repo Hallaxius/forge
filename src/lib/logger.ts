@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { colors } from "../constants/colors.ts";
+import { colors } from "../constants/colors.js";
 
 export function error(msg: string): void {
 	console.error(chalk.hex(colors.error)(msg));

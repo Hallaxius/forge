@@ -13,7 +13,7 @@
 	"scripts": {
 		"dev": "bun --watch src/cli.ts",
 		"build:version": "bun scripts/gen-version.mjs",
-		"build": "bun run build:version && bun build src/cli.ts --outdir dist --target node --external inquirer",
+		"build": "bun run build:version && bun build src/cli.ts --outdir dist --target node",
 		"start": "bun bin/forge.js",
 		"test": "bun test",
 		"lint": "biome check",
@@ -21,9 +21,9 @@
 		"lint:fix": "biome check --write --unsafe",
 		"prepublishOnly": "bun run build && bun test",
 		"prepack": "bun run build",
-		"patch": "npm version patch && npm publish",
-		"minor": "npm version minor && npm publish",
-		"major": "npm version major && npm publish"
+		"patch": "bun version patch && bun publish",
+		"minor": "bun version minor && bun publish",
+		"major": "bun version major && bun publish"
 	},
 	"dependencies": {
 		"@octokit/rest": "^21.1.0",
@@ -32,12 +32,13 @@
 		"conf": "^12.0.0",
 		"diff": "^7.0.0",
 		"figures": "^5.0.0",
-		"inquirer": "^14.0.2",
 		"isomorphic-git": "^1.38.0",
 		"ora": "^8.0.0"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.5.1",
+		"@types/diff": "^8.0.0",
+		"@types/node": "^26.0.1",
 		"typescript": "^5.3.0"
 	},
 	"files": [

@@ -19,6 +19,10 @@ async function createClient(): Promise<Octokit> {
 	return new Octokit({ auth: token });
 }
 
+async function createClientWithToken(token: string): Promise<Octokit> {
+	return new Octokit({ auth: token });
+}
+
 export async function getRepoInfo(): Promise<{ owner: string; repo: string }> {
 	const dir = process.cwd();
 	const remoteUrl = await getConfig({ fs, dir, path: "remote.origin.url" });
@@ -159,6 +163,31 @@ export interface AccountInfo {
 
 export async function getAccountInfo(): Promise<AccountInfo> {
 	const octokit = await createClient();
+	const { data } = await octokit.users.getAuthenticated();
+	return {
+		login: data.login,
+		name: data.name ?? null,
+		email: data.email ?? null,
+		avatarUrl: data.avatar_url,
+		profileUrl: data.html_url,
+		publicRepos: data.public_repos,
+		publicGists: data.public_gists,
+		followers: data.followers,
+		following: data.following,
+		createdAt: data.created_at,
+		plan: data.plan?.name ?? null,
+		bio: data.bio ?? null,
+		company: data.company ?? null,
+		location: data.location ?? null,
+		twitter: data.twitter_username ?? null,
+		blog: data.blog ?? null,
+	};
+}
+
+export async function getAccountInfoWithToken(
+	token: string,
+): Promise<AccountInfo> {
+	const octokit = await createClientWithToken(token);
 	const { data } = await octokit.users.getAuthenticated();
 	return {
 		login: data.login,

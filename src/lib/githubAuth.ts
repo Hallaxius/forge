@@ -1,7 +1,3 @@
-/**
- * GitHub OAuth Device Flow handler for CLI authentication
- */
-
 export interface DeviceCodeResponse {
 	device_code: string;
 	user_code: string;
@@ -16,9 +12,6 @@ export interface AccessTokenResponse {
 	scope: string;
 }
 
-/**
- * GitHub OAuth client configuration
- */
 const GITHUB_OAUTH_CONFIG = {
 	client_id: process.env.GITHUB_CLIENT_ID || "Ov23lib0kLONoYtd9AA3",
 	scope: "user:email repo read:org workflow",
@@ -26,9 +19,6 @@ const GITHUB_OAUTH_CONFIG = {
 	token_url: "https://github.com/login/oauth/access_token",
 };
 
-/**
- * Request device code from GitHub
- */
 export async function requestDeviceCode(): Promise<DeviceCodeResponse> {
 	const response = await fetch(GITHUB_OAUTH_CONFIG.device_auth_url, {
 		method: "POST",
@@ -51,17 +41,28 @@ export async function requestDeviceCode(): Promise<DeviceCodeResponse> {
 	return response.json();
 }
 
-/**
- * Poll for access token using device code
- */
 export async function pollForAccessToken(
 	deviceCode: string,
 	interval: number,
 	expirationTime: number,
 ): Promise<AccessTokenResponse> {
 	const startTime = Date.now();
+	const maxAttempts = Math.floor(expirationTime / interval) + 10;
+	let attempts = 0;
+	let lastError: string | null = null;
 
-	while (Date.now() - startTime < expirationTime * 1000) {
+	while (
+		Date.now() - startTime < expirationTime * 1000 &&
+		attempts < maxAttempts
+	) {
+		attempts++;
+
+		if (attempts % 5 === 0) {
+			process.stdout.write(
+				`\rWaiting for authorization... (${attempts}/${maxAttempts})`,
+			);
+		}
+
 		try {
 			const response = await fetch(GITHUB_OAUTH_CONFIG.token_url, {
 				method: "POST",
@@ -78,8 +79,15 @@ export async function pollForAccessToken(
 
 			if (!response.ok) {
 				const errorData = await response.json().catch(() => ({}));
+				lastError = errorData.error || String(response.status);
 
 				if (errorData.error === "authorization_pending") {
+					await new Promise((resolve) => setTimeout(resolve, interval * 1000));
+					continue;
+				}
+
+				if (errorData.error === "slow_down") {
+					interval = Math.min(interval * 2, 30);
 					await new Promise((resolve) => setTimeout(resolve, interval * 1000));
 					continue;
 				}
@@ -89,12 +97,22 @@ export async function pollForAccessToken(
 				}
 
 				throw new Error(
-					`Failed to get access token: ${errorData.error || response.status}`,
+					`Failed to get access token: ${errorData.error || String(response.status)}`,
 				);
 			}
 
-			return response.json();
+			const tokenResponse = await response.json();
+
+			if (!tokenResponse.access_token) {
+				throw new Error("No access token received from GitHub");
+			}
+
+			process.stdout.write(`\r${" ".repeat(50)}\r`);
+
+			return tokenResponse;
 		} catch (err) {
+			lastError = err instanceof Error ? err.message : String(err);
+
 			if (err instanceof Error && err.name !== "AbortError") {
 				await new Promise((resolve) => setTimeout(resolve, interval * 1000));
 				continue;
@@ -103,14 +121,17 @@ export async function pollForAccessToken(
 		}
 	}
 
+	process.stdout.write(`\r${" ".repeat(50)}\r`);
+
 	throw new Error(
-		"Authorization timeout: User did not authorize within the time limit",
+		lastError?.includes("denied")
+			? "Authorization denied by user"
+			: lastError?.includes("timeout")
+				? "Authorization timeout: User did not authorize within the time limit"
+				: `Authorization failed: ${lastError || "User did not authorize within the time limit"}`,
 	);
 }
 
-/**
- * Open browser automatically based on the platform
- */
 export async function openBrowser(url: string): Promise<boolean> {
 	try {
 		const { platform } = process;
@@ -137,16 +158,13 @@ export async function openBrowser(url: string): Promise<boolean> {
 	}
 }
 
-/**
- * Main function to handle GitHub Device Flow authentication
- */
 export async function githubDeviceFlow(timeout?: number): Promise<string> {
 	const deviceCodeResponse = await requestDeviceCode();
 
 	const { device_code, user_code, verification_uri, expires_in, interval } =
 		deviceCodeResponse;
 
-	const effectiveTimeout = timeout || expires_in || 300;
+	const effectiveTimeout = Math.min(timeout || expires_in || 600, 600);
 
 	console.log("");
 	console.log("GitHub Authentication");
@@ -173,11 +191,15 @@ export async function githubDeviceFlow(timeout?: number): Promise<string> {
 		}
 	}
 
+	console.log("Waiting for authorization...");
+
 	const tokenResponse = await pollForAccessToken(
 		device_code,
 		interval,
 		effectiveTimeout,
 	);
+
+	console.log("Authorization successful!");
 
 	return tokenResponse.access_token;
 }

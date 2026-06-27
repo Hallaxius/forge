@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import fs, { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { diffLines } from "diff";
 import git, {
@@ -297,13 +297,9 @@ export async function createBranch(name: string): Promise<void> {
 
 export async function deleteBranch(
 	name: string,
-	force: boolean = false,
+	_force: boolean = false,
 ): Promise<void> {
-	if (force) {
-		await git.deleteBranch({ fs, dir, ref: name });
-	} else {
-		await git.deleteBranch({ fs, dir, ref: name });
-	}
+	await git.deleteBranch({ fs, dir, ref: name });
 }
 
 export async function switchBranch(name: string): Promise<void> {

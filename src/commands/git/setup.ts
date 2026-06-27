@@ -1,7 +1,7 @@
 import type { Command } from "commander";
 import { encryptToken, generateMachineKey } from "../../lib/auth.js";
 import { ConfigManager } from "../../lib/config.js";
-import { getAccountInfo } from "../../lib/github.js";
+import { getAccountInfoWithToken } from "../../lib/github.js";
 import { githubDeviceFlow } from "../../lib/githubAuth.js";
 import { error, newline, text, warning } from "../../lib/logger.js";
 import { confirm, input, password } from "../../lib/ui.js";
@@ -69,8 +69,8 @@ export default function register(program: Command): void {
 
 				let account: any;
 				try {
+					account = await getAccountInfoWithToken(rawToken);
 					config.set("github.encryptedToken", rawToken);
-					account = await getAccountInfo();
 				} catch (_validationErr) {
 					error("Invalid GitHub token. Please check your token and try again.");
 					return;
