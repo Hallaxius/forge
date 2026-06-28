@@ -144,7 +144,7 @@ function processNextPrompt(): void {
 		globalThis.pauseRepl();
 	}
 
-	process.stdin.write(`${next.question.message} `);
+	process.stdout.write(`${next.question.message} `);
 }
 
 export function cleanup(): void {
